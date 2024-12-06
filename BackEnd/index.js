@@ -9,7 +9,7 @@ app.use(cors());
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
+//o
 app.get('/', (req, res) => {
     res.send('Hello from Express!');
   });
