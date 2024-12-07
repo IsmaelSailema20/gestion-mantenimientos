@@ -1,7 +1,8 @@
 import "./App.css";
-
+import "./styles/main.css";
+import PaginaLogin from "./pages/PaginaLogin";
 function App() {
-  return <h1>Hola mundo</h1>;
+  return <PaginaLogin />;
 }
 
 export default App;
