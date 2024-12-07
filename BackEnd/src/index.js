@@ -5,7 +5,7 @@ const port = 5000;
 const routes = require('./api/endPoints');
 // Habilitar CORS para todas las rutas
 app.use(cors());
-
+app.use(express.json());
 app.use('/',routes);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
