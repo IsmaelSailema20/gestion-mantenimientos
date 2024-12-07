@@ -1,0 +1,27 @@
+/* Definir los colores como variables CSS */
+:root {
+  --uta: #921c21; /* Color para primary */
+  --button: #cd3333; /* Color para los botones */
+  --light: #ffffff; /* Color para texto blanco */
+}
+
+/* Personalizar la clase .bg-primary para usar el color --uta */
+.bg-principal {
+  background-color: var(--uta);
+}
+
+/* Personalizar la clase .btn-primary para usar el color --button */
+.btn-principal {
+  background-color: var(--button);
+  border-color: var(--button);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  button-outline: none;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* Personalizar texto blanco con --light */
+.text-light {
+  color: var(--light);
+}
