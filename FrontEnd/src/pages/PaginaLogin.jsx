@@ -1,18 +1,25 @@
 import { useState } from "react";
 import axios from "axios";
+import Home from "./home";
+
 function PaginaLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       // CAMBIAR LA RUTA DE LA PETICIÓN
-      const response = await axios.post("http://localhost:5000/", {
+      const response = await axios.post("http://localhost:5000/login", {
         username,
         password,
       });
+      if (response.data.token) {
+        localStorage.setItem("token",response.data.token);
+        //window.location.reload();
+        setLoginSuccess(true);
+      }
       setMessage(response.data.message); // Mostrar el mensaje de éxito desde la solicitud
     } catch (error) {
       setMessage(
@@ -22,6 +29,9 @@ function PaginaLogin() {
   };
 
   return (
+    <>
+      {loginSuccess ? <Home/>  : 
+      
     <div
       className="container-fluid min-vh-100 d-flex p-0"
       style={{ height: "100vh" }}
@@ -110,6 +120,8 @@ function PaginaLogin() {
         </div>
       </div>
     </div>
+  } </> 
+
   );
 }
 
