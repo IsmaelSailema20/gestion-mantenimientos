@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import parsejwt from '../MAIN/Main';
+import {parseJwt} from '../MAIN/Main';
 const Home = () => {
     const [activos, setActivos] = useState([]);
     const [paginaActual, setPaginaActual] = useState(1);
     const elementosPorPagina = 15; // Número de elementos por página
-
+    const [username,setUsername]=useState('');
     useEffect(() => {
         const fetchActivos = async () => {
             try {
@@ -15,8 +15,18 @@ const Home = () => {
                 console.error("Error al obtener los datos:", error);
             }
         };
-
         fetchActivos();
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken = parseJwt(token);
+            if (decodedToken && decodedToken.username) {
+                setUsername(decodedToken.username); 
+            }else{
+                console.log('no username');
+            }
+        }else{
+            console.log("no token");
+        }
     }, []);
 
     const handleActualizar = (activo) => {
@@ -81,7 +91,7 @@ const Home = () => {
 
             {/* Contenido principal */}
             <div className="container mt-4">
-                <h1 className="mb-4">Bienvenido User</h1>
+            <h1 className="mb-4">Bienvenido {username}</h1>
 
                 <div className="mb-3 d-flex gap-3">
                     <button className="btn" style={{ backgroundColor: 'rgb(163, 33, 38)', color: 'white' }}>Registro Individual</button>
