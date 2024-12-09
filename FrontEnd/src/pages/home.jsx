@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import parsejwt from '../MAIN/Main';
 const Home = () => {
     const [activos, setActivos] = useState([]);
     const [paginaActual, setPaginaActual] = useState(1);
@@ -23,6 +23,11 @@ const Home = () => {
         console.log("Actualizar activo:", activo);
         // Agrega tu lógica para actualizar el activo aquí
     };
+    const CerrarSesion = () =>{
+        localStorage.removeItem('token');
+        window.location.reload();
+
+    } 
 
     const indiceInicial = (paginaActual - 1) * elementosPorPagina;
     const indiceFinal = indiceInicial + elementosPorPagina;
@@ -62,7 +67,8 @@ const Home = () => {
                     </div>
                 </div>
                 <div className="d-flex align-items-center">
-                    <button className="btn text-white d-flex align-items-center">
+                    <button className="btn text-white d-flex align-items-center"
+                    onClick={CerrarSesion}>
                         <img 
                             src="/SESION CERR.png" 
                             alt="Cerrar Sesión" 
