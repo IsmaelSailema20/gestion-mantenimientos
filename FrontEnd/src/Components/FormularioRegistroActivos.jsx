@@ -32,21 +32,69 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     observaciones: "",
     encargado: "",
   });
+  const [errors, setErrors] = useState({
+    nombreActivo: false,
+    modelo: false,
+    marca: false,
+    tipoActivo: false,
+    numeroSerie: false,
+    procesoCompra: false,
+    proveedor: false,
+    ubicacion: false,
+    estado: false,
+    especificaciones: false,
+    observaciones: false,
+    encargado: false,
+  });
 
   // Función para manejar los cambios en los campos del formulario
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
+    setErrors({ ...errors, [id]: value.trim() === "" });
   };
 
   // Función para manejar la selección del estado
   const handleEstadoChange = (e) => {
     setFormData({ ...formData, estado: e.target.value });
+    setErrors({ ...errors, estado: e.target.value.trim() === "" });
   };
 
   // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validar campos requeridos
+    const newErrors = {};
+    let fieldsAreEmpty = false;
+    Object.keys(formData).forEach((key) => {
+      if (formData[key].trim() === "") {
+        newErrors[key] = true; // Marcar campo como vacío
+        fieldsAreEmpty = true; // Detectar si hay campos vacíos
+      } else {
+        newErrors[key] = false;
+      }
+    });
+
+    // Validación del estado (debe ser un valor)
+    if (formData.estado === "") {
+      newErrors.estado = true;
+      fieldsAreEmpty = true;
+    } else {
+      newErrors.estado = false;
+    }
+
+    setErrors(newErrors);
+
+    // Si hay campos vacíos, mostrar el modal de error y no enviar el formulario
+    if (fieldsAreEmpty) {
+      setModalDataError({
+        titulo: "Campos vacíos",
+        mensaje: "Por favor, complete todos los campos requeridos.",
+      });
+      setShowModalError(true); // Mostrar el modal de error
+      return; // No enviar el formulario
+    }
     console.log(formData);
     // Resetear los estados de los modales antes de enviar una nueva solicitud
     setShowModal(false); // Ocultar el modal de éxito
@@ -110,9 +158,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
         setShowModal(false);
       });
   };
+
   const handleChangeEncargado = (e) => {
     setSelectedEncargado(e.target.value);
-    // Establece el laboratorista seleccionado
     formData.encargado = e.target.value;
   };
 
@@ -149,6 +197,11 @@ function FormularioActivo({ closeModal, agregarActivo }) {
         console.error("Hubo un error al obtener los datos:", error);
       });
   }, []);
+
+  const getInputClass = (field) => {
+    return errors[field] ? "form-control is-invalid" : "form-control";
+  };
+
   return (
     <>
       <div className="d-flex justify-content-between text-center align-items-center mb-4">
@@ -166,7 +219,6 @@ function FormularioActivo({ closeModal, agregarActivo }) {
           &times;
         </span>
       </div>
-
       <form
         onSubmit={handleSubmit}
         style={{
@@ -184,8 +236,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Nombre del activo
           </label>
           <input
+            maxLength="100"
             type="text"
-            className="form-control"
+            className={getInputClass("nombreActivo")}
             id="nombreActivo"
             value={formData.nombreActivo}
             onChange={handleChange}
@@ -207,8 +260,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Modelo
               </label>
               <input
+                maxLength="100"
                 type="text"
-                className="form-control"
+                className={getInputClass("modelo")}
                 id="modelo"
                 value={formData.modelo}
                 onChange={handleChange}
@@ -227,14 +281,21 @@ function FormularioActivo({ closeModal, agregarActivo }) {
               >
                 Tipo de Activo
               </label>
-              <input
-                type="text"
-                className="form-control"
+              <select
+                className={getInputClass("tipoActivo")}
                 id="tipoActivo"
                 value={formData.tipoActivo}
                 onChange={handleChange}
-                placeholder="Tipo de Activo"
-              />
+                style={{
+                  padding: "5px",
+                  borderRadius: "5px",
+                  width: "100%",
+                }}
+              >
+                <option value="">Seleccione el tipo de activo</option>
+                <option value="informático">Informático</option>
+                <option value="no informático">No Informático</option>
+              </select>
             </div>
 
             <div className="form-group">
@@ -249,8 +310,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Proceso de compra
               </label>
               <input
+                maxLength="100"
                 type="text"
-                className="form-control"
+                className={getInputClass("procesoCompra")}
                 id="procesoCompra"
                 value={formData.procesoCompra}
                 onChange={handleChange}
@@ -274,8 +336,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Marca
               </label>
               <input
+                maxLength="100"
                 type="text"
-                className="form-control"
+                className={getInputClass("marca")}
                 id="marca"
                 value={formData.marca}
                 onChange={handleChange}
@@ -294,8 +357,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Número de serie
               </label>
               <input
+                maxLength="50"
                 type="text"
-                className="form-control"
+                className={getInputClass("numeroSerie")}
                 id="numeroSerie"
                 value={formData.numeroSerie}
                 onChange={handleChange}
@@ -314,13 +378,12 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Proveedor
               </label>
               <select
-                className="form-control"
+                className={getInputClass("proveedor")}
                 value={selectedProveedor}
                 onChange={handleChangeProveedor}
                 id="proveedor"
               >
                 <option value="">Seleccione un Proveedor</option>
-                {/* Itera sobre el array de laboratoristas para crear un <option> por cada uno */}
                 {proveedores.map((proveedor) => (
                   <option
                     key={proveedor.id_proveedor}
@@ -345,13 +408,12 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Bloque y Laboratorio
           </label>
           <select
-            className="form-control"
+            className={getInputClass("ubicacion")}
             value={selectedUbicacion}
             onChange={handleChangeUbicacion}
             id="ubicacion"
           >
             <option value="">Seleccione una ubicacion</option>
-            {/* Itera sobre el array de laboratoristas para crear un <option> por cada uno */}
             {ubicaciones.map((ubicacion) => (
               <option
                 key={ubicacion.id_ubicacion}
@@ -416,7 +478,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Especificaciones
           </label>
           <textarea
-            className="form-control"
+            maxLength="500"
+            className={getInputClass("especificaciones")}
             id="especificaciones"
             value={formData.especificaciones}
             onChange={handleChange}
@@ -438,7 +501,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Observaciones
           </label>
           <textarea
-            className="form-control"
+            maxLength="500"
+            className={getInputClass("observaciones")}
             id="observaciones"
             value={formData.observaciones}
             onChange={handleChange}
@@ -447,7 +511,6 @@ function FormularioActivo({ closeModal, agregarActivo }) {
           ></textarea>
         </div>
 
-        {/* Encargado (Input normal) */}
         <div className="form-group">
           <label
             htmlFor="encargado"
@@ -460,13 +523,12 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Encargado
           </label>
           <select
-            className="form-control"
+            className={getInputClass("encargado")}
             value={selectedEncargado}
             onChange={handleChangeEncargado}
             id="encargado"
           >
             <option value="">Seleccione un Encargado</option>
-            {/* Itera sobre el array de laboratoristas para crear un <option> por cada uno */}
             {encargados.map((laboratorista) => (
               <option key={laboratorista.cedula} value={laboratorista.cedula}>
                 {laboratorista.nombre} {laboratorista.apellido}
@@ -489,7 +551,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
         </div>
       </form>
 
-      {/* Aquí pasamos `showModal` y `modalData` como props al SuccessModal */}
+      {/* Aquí pasamos showModal y modalData como props al SuccessModal */}
       {showModal && (
         <SuccessModal titulo={modalData.titulo} mensaje={modalData.mensaje} />
       )}
@@ -502,8 +564,10 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     </>
   );
 }
+
 FormularioActivo.propTypes = {
   closeModal: PropTypes.func.isRequired,
   agregarActivo: PropTypes.func.isRequired, // La propiedad titulo debe ser una funcion y es requerida
 };
+
 export default FormularioActivo;
