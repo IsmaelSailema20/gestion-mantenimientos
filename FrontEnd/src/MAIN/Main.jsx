@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Home from "../pages/home";
 import Login from "../pages/PaginaLogin";
-import '../styles/modalx.css';
+import "../styles/modalx.css";
 
 export function parseJwt(token) {
   const base64Url = token.split(".")[1];
@@ -59,9 +59,9 @@ const Main = () => {
     <>
       {isTokenValid ? <Home /> : <Login />}
       {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="error-icon">×</div>
+        <div className="modalE">
+          <div className="modal-contentE">
+            <div className="error-iconE">×</div>
             <h2>Sesión Expirada</h2>
             <p>Tu sesión ha caducado. Por favor, inicia sesión nuevamente.</p>
             <button onClick={handleLogout}>Aceptar</button>

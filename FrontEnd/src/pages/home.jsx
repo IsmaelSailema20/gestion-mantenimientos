@@ -156,13 +156,13 @@ const Home = () => {
         {mostrarFormulario && (
           <div
             className="modal fade show"
-            style={{ display: "block"}}
+            style={{ display: "block" }}
             aria-labelledby="exampleModalLabel"
             aria-hidden="true"
           >
             <div
               className="modal-dialog"
-              style={{ maxWidth: "580px", maxHeight: "500px"}}
+              style={{ maxWidth: "600px", maxHeight: "500px" }}
             >
               <div className="modal-content">
                 <div className="modal-body">

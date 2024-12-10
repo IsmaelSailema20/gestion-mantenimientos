@@ -69,13 +69,13 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     let fieldsAreEmpty = false;
     Object.keys(formData).forEach((key) => {
       if (formData[key].trim() === "") {
-        newErrors[key] = true;  // Marcar campo como vacío
-        fieldsAreEmpty = true;   // Detectar si hay campos vacíos
+        newErrors[key] = true; // Marcar campo como vacío
+        fieldsAreEmpty = true; // Detectar si hay campos vacíos
       } else {
         newErrors[key] = false;
       }
     });
-  
+
     // Validación del estado (debe ser un valor)
     if (formData.estado === "") {
       newErrors.estado = true;
@@ -83,9 +83,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     } else {
       newErrors.estado = false;
     }
-  
+
     setErrors(newErrors);
-  
+
     // Si hay campos vacíos, mostrar el modal de error y no enviar el formulario
     if (fieldsAreEmpty) {
       setModalDataError({
@@ -222,7 +222,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       <form
         onSubmit={handleSubmit}
         style={{
-          maxHeight: "6000px",
+          maxHeight: "600px",
           overflowY: "auto",
           overflowX: "hidden",
           padding: "5px",
@@ -482,7 +482,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             style={{
               fontWeight: "bold",
               marginBottom: "10px",
-              marginTop: "10px"
+              marginTop: "10px",
             }}
           >
             Observaciones
