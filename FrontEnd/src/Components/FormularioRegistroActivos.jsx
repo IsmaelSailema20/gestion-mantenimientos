@@ -236,6 +236,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Nombre del activo
           </label>
           <input
+            maxLength="100"
             type="text"
             className={getInputClass("nombreActivo")}
             id="nombreActivo"
@@ -259,6 +260,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Modelo
               </label>
               <input
+                maxLength="100"
                 type="text"
                 className={getInputClass("modelo")}
                 id="modelo"
@@ -279,14 +281,21 @@ function FormularioActivo({ closeModal, agregarActivo }) {
               >
                 Tipo de Activo
               </label>
-              <input
-                type="text"
+              <select
                 className={getInputClass("tipoActivo")}
                 id="tipoActivo"
                 value={formData.tipoActivo}
                 onChange={handleChange}
-                placeholder="Tipo de Activo"
-              />
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  width: "100%",
+                }}
+              >
+                <option value="">Seleccione el tipo de activo</option>
+                <option value="informático">Informático</option>
+                <option value="no informático">No Informático</option>
+              </select>
             </div>
 
             <div className="form-group">
@@ -301,6 +310,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Proceso de compra
               </label>
               <input
+                maxLength="100"
                 type="text"
                 className={getInputClass("procesoCompra")}
                 id="procesoCompra"
@@ -326,6 +336,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Marca
               </label>
               <input
+                maxLength="100"
                 type="text"
                 className={getInputClass("marca")}
                 id="marca"
@@ -346,6 +357,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 Número de serie
               </label>
               <input
+                maxLength="50"
                 type="text"
                 className={getInputClass("numeroSerie")}
                 id="numeroSerie"
@@ -466,6 +478,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Especificaciones
           </label>
           <textarea
+            maxLength="500"
             className={getInputClass("especificaciones")}
             id="especificaciones"
             value={formData.especificaciones}
@@ -488,6 +501,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             Observaciones
           </label>
           <textarea
+            maxLength="500"
             className={getInputClass("observaciones")}
             id="observaciones"
             value={formData.observaciones}
@@ -497,7 +511,6 @@ function FormularioActivo({ closeModal, agregarActivo }) {
           ></textarea>
         </div>
 
-        {/* Encargado (Input normal) */}
         <div className="form-group">
           <label
             htmlFor="encargado"
