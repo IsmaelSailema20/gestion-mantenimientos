@@ -1,5 +1,5 @@
-const connection = require('../models/db');
-const jwt = require('jsonwebtoken');
+const connection = require('../models/db'); // Asegúrate de que esta ruta sea correcta
+const jwt = require('jsonwebtoken'); // Corrige el nombre del paquete
 
 module.exports.login = (req, res) => {
     const { username, password } = req.body;
@@ -19,8 +19,8 @@ module.exports.login = (req, res) => {
                         username: result[0].username,
                         rol: result[0].rol,
                     },
-                    "stack",
-                    { expiresIn: '1h' }
+                    "stack", // Clave secreta para firmar el token
+                    { expiresIn: '10s' } // Token expira en 10 segundos
                 );
                 console.log("Token generado:", token);
                 return res.status(200).send({ token }); // Detenemos el flujo con return

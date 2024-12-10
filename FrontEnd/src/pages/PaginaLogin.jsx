@@ -7,8 +7,16 @@ function PaginaLogin() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loginSuccess, setLoginSuccess] = useState(false);
+  
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // Validar campos incompletos
+    if (!username || !password) {
+      setMessage("Por favor, completa todos los campos.");
+      return;
+    }
+
     try {
       // CAMBIAR LA RUTA DE LA PETICIÓN
       const response = await axios.post("http://localhost:5000/login", {
@@ -16,21 +24,25 @@ function PaginaLogin() {
         password,
       });
       if (response.data.token) {
-        localStorage.setItem("token",response.data.token);
-        //window.location.reload();
+        localStorage.setItem("token", response.data.token);
         setLoginSuccess(true);
       }
-      setMessage(response.data.message); // Mostrar el mensaje de éxito desde la solicitud
     } catch (error) {
-      setMessage(
-        error.response ? error.response.data.message : "Error en la solicitud"
-      );
+      if (error.response && error.response.status === 401) {
+        // Manejar credenciales incorrectas
+        setMessage("Credenciales incorrectas");
+      } else {
+        // Manejar otros errores
+        setMessage(
+          error.response ? error.response.data.message : "Error en la solicitud"
+        );
+      }
     }
   };
 
   return (
     <>
-      {loginSuccess ? <Home/>  : 
+      {loginSuccess ? <Home /> : 
       
     <div
       className="container-fluid min-vh-100 d-flex p-0"
@@ -115,12 +127,12 @@ function PaginaLogin() {
                 LOGIN
               </button>
             </form>
-            {message && <p>{message}</p>}
+            {message && <p className="text-danger mt-3">{message}</p>}
           </div>
         </div>
       </div>
     </div>
-  } </> 
+    } </> 
 
   );
 }
