@@ -1,19 +1,8 @@
 const connection = require('../models/db');
 
-module.exports.getActivos = (req, res) => {
+module.exports.getProveedores = (req, res) => {
     const query = `
-        SELECT 
-	a.id_activo as id,
-            a.numero_serie AS Codigo,
-            a.nombre AS Nombre,
-            a.tipo AS Tipo,
-            u.nombre AS Ubicación,
-            a.estado AS Estado
-        FROM 
-            activos a
-        LEFT JOIN 
-            ubicaciones u ON a.id_ubicacion = u.id_ubicacion
-            ORDER by a.id_activo DESC;
+        SELECT * FROM gestionactivos.proveedores;
     `;
 
     try {

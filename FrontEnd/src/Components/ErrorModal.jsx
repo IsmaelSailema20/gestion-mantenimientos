@@ -1,0 +1,90 @@
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types"; // Importa PropTypes
+// Agregar validación de las propiedades usando PropTypes
+ErrorModal.propTypes = {
+  titulo: PropTypes.string.isRequired, // La propiedad titulo debe ser un string y es requerida
+  mensaje: PropTypes.string.isRequired, // La propiedad mensaje debe ser un string y es requerida
+};
+function ErrorModal({ titulo, mensaje }) {
+  const [showModal, setShowModal] = useState(false); // Controlar la visibilidad del modal
+
+  // Mostrar el modal automáticamente al montar el componente
+  useEffect(() => {
+    setShowModal(true); // Muestra el modal cuando se monta el componente
+
+    // Cerrar el modal automáticamente después de 3 segundos
+    const timer = setTimeout(() => {
+      setShowModal(false); // Cierra el modal después de 3 segundos
+    }, 3000);
+
+    // Limpiar el timer cuando el componente se desmonte
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <>
+      <div
+        className={`modal fade ${showModal ? "show" : ""}`} // Aparece solo si showModal es true
+        id="statusErrorsModal"
+        tabIndex="-1"
+        role="dialog"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        style={{ display: showModal ? "block" : "none" }} // Mostrar solo si showModal es true
+      >
+        <div
+          className="modal-dialog modal-dialog-centered modal-sm"
+          role="document"
+        >
+          <div className="modal-content">
+            <div className="modal-body text-center p-lg-4">
+              <svg
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 130.2 130.2"
+              >
+                <circle
+                  className="path circle"
+                  fill="none"
+                  stroke="#db3646"
+                  strokeWidth="6"
+                  strokeMiterlimit="10"
+                  cx="65.1"
+                  cy="65.1"
+                  r="62.1"
+                />
+                <line
+                  className="path line"
+                  fill="none"
+                  stroke="#db3646"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeMiterlimit="10"
+                  x1="34.4"
+                  y1="37.9"
+                  x2="95.8"
+                  y2="92.3"
+                />
+                <line
+                  className="path line"
+                  fill="none"
+                  stroke="#db3646"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeMiterlimit="10"
+                  x1="95.8"
+                  y1="38"
+                  x2="34.4"
+                  y2="92.2"
+                />
+              </svg>
+              <h4 className="text-danger mt-3">{titulo}</h4>
+              <p className="mt-3">{mensaje}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default ErrorModal;
