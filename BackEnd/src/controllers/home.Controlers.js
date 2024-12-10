@@ -3,7 +3,8 @@ const connection = require('../models/db');
 module.exports.getActivos = (req, res) => {
     const query = `
         SELECT 
-            a.codigo AS Codigo,
+	a.id_activo as id,
+            a.numero_serie AS Codigo,
             a.nombre AS Nombre,
             a.tipo AS Tipo,
             u.nombre AS Ubicación,
@@ -11,7 +12,8 @@ module.exports.getActivos = (req, res) => {
         FROM 
             activos a
         LEFT JOIN 
-            ubicaciones u ON a.id_ubicacion = u.id_ubicacion;
+            ubicaciones u ON a.id_ubicacion = u.id_ubicacion
+            ORDER by a.id_activo DESC;
     `;
 
     try {

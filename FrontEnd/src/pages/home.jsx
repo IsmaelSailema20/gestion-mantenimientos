@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import TablaActivos from "../Components/TablaActivos";
+
 import axios from "axios";
 import FormularioRegistroActivos from "../Components/FormularioRegistroActivos";
+
 const Home = () => {
   const [activos, setActivos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -19,11 +22,11 @@ const Home = () => {
 
     fetchActivos();
   }, []);
-
+  /*
   const handleActualizar = (activo) => {
     console.log("Actualizar activo:", activo);
     // Agrega tu lógica para actualizar el activo aquí
-  };
+  };*/
 
   const indiceInicial = (paginaActual - 1) * elementosPorPagina;
   const indiceFinal = indiceInicial + elementosPorPagina;
@@ -47,9 +50,26 @@ const Home = () => {
   const handleRegistroIndividual = () => {
     setMostrarFormulario(true); // Muestra el formulario de registro
   };
+
   // Función para cerrar el modal
   const handleCerrarModal = () => {
     setMostrarFormulario(false); // Oculta el formulario de registro
+  };
+
+  // Función para agregar un nuevo activo a la tabla
+  const agregarActivo = (nuevoActivo) => {
+    console.log("Nuevo activo:", nuevoActivo);
+
+    // Aquí realizamos una solicitud GET para obtener los activos más recientes
+    // para asegurarnos de que los datos estén actualizados
+    axios
+      .get("http://localhost:5000/activos")
+      .then((response) => {
+        setActivos(response.data); // Actualizar el estado con los activos más recientes
+      })
+      .catch((error) => {
+        console.error("Error al obtener los datos actualizados:", error);
+      });
   };
 
   return (
@@ -109,6 +129,7 @@ const Home = () => {
             Registro por Lotes
           </button>
         </div>
+
         {/* Modal para mostrar el formulario */}
         {mostrarFormulario && (
           <div
@@ -123,79 +144,18 @@ const Home = () => {
             >
               <div className="modal-content">
                 <div className="modal-body">
-                  <FormularioRegistroActivos closeModal={handleCerrarModal} />
+                  <FormularioRegistroActivos
+                    closeModal={handleCerrarModal}
+                    agregarActivo={agregarActivo} // Pasamos la función para agregar el activo
+                  />
                 </div>
               </div>
             </div>
           </div>
         )}
-        {/* Tabla con scroll horizontal */}
-        <div className="table-responsive">
-          <table
-            className="table-bordered"
-            style={{ border: "2px solid black", width: "100%" }}
-          >
-            <thead
-              className="p-4"
-              style={{
-                backgroundColor: "#921c21",
-                height: "50px",
-                color: "white",
-                textAlign: "center",
-              }}
-            >
-              <tr>
-                <th>Codigo</th>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Ubicación</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody style={{ textAlign: "center" }}>
-              {activosPaginados.length > 0 ? (
-                activosPaginados.map((activo, index) => (
-                  <tr key={index} style={{ height: "60px" }}>
-                    <td>{activo.Codigo}</td>
-                    <td>{activo.Nombre}</td>
-                    <td>{activo.Tipo}</td>
-                    <td>{activo.Ubicación}</td>
-                    <td>{activo.Estado}</td>
-                    <td className="text-center">
-                      <button
-                        className="btn d-flex align-items-center"
-                        style={{
-                          backgroundColor: "transparent",
-                          border: "none",
-                          padding: 0,
-                        }}
-                        onClick={() => handleActualizar(activo)}
-                      >
-                        <img
-                          src="/actualizar.png"
-                          alt="Actualizar"
-                          style={{
-                            width: "44px",
-                            height: "34px",
-                            marginRight: "8px",
-                          }}
-                        />
-                        Actualizar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr style={{ height: "60px" }}>
-                  <td colSpan="6" className="text-center">
-                    No hay datos disponibles
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+
+        {/* Tabla de activos */}
+        <TablaActivos activos={activosPaginados} />
 
         {/* Controles de paginación */}
         <div

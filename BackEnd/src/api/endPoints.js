@@ -6,12 +6,12 @@ const {getActivos} = require('../controllers/home.Controlers.js');
 const {getLaboratoristas} = require('../controllers/laboratoristasControllers.js');
 const {getProveedores} = require('../controllers/proveedoresController.js');
 const {getUbicaciones} = require('../controllers/ubicacionesController.js');
-
-
+const {registrarActivos} = require('../controllers/registrarActivosController.js');
 router.get('/activos', getActivos);
 router.get('/ping',ping);
 router.post('/login',login);
 router.get('/laboratoristas',getLaboratoristas);
 router.get('/proveedores',getProveedores);
 router.get('/ubicaciones',getUbicaciones);
+router.post('/registrarActivos',registrarActivos);
 module.exports =router; 

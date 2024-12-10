@@ -1,14 +1,23 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import SuccessModal from "./SuccessModal";
+import ErrorModal from "./ErrorModal";
+import PropTypes from "prop-types";
 
-function FormularioActivo({ closeModal }) {
+function FormularioActivo({ closeModal, agregarActivo }) {
   const [encargados, setEncargados] = useState([]);
   const [selectedEncargado, setSelectedEncargado] = useState("");
   const [proveedores, setProveedores] = useState([]);
   const [selectedProveedor, setSelectedProveedor] = useState("");
   const [ubicaciones, setUbicaciones] = useState([]);
   const [selectedUbicacion, setSelectedUbicacion] = useState("");
-
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
+  const [showModalError, setShowModalError] = useState(false);
+  const [modalDataError, setModalDataError] = useState({
+    titulo: "",
+    mensaje: "",
+  });
   const [formData, setFormData] = useState({
     nombreActivo: "",
     modelo: "",
@@ -39,6 +48,67 @@ function FormularioActivo({ closeModal }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(formData);
+    // Resetear los estados de los modales antes de enviar una nueva solicitud
+    setShowModal(false); // Ocultar el modal de éxito
+    setShowModalError(false); // Ocultar el modal de error
+
+    // Construir los datos que quieres enviar al backend
+    const dataToSend = {
+      nombreActivo: formData.nombreActivo,
+      modelo: formData.modelo,
+      marca: formData.marca,
+      tipoActivo: formData.tipoActivo,
+      numeroSerie: formData.numeroSerie,
+      procesoCompra: formData.procesoCompra,
+      proveedor: selectedProveedor, // Usamos el valor del proveedor seleccionado
+      ubicacion: selectedUbicacion, // Usamos el valor de la ubicación seleccionada
+      estado: formData.estado,
+      especificaciones: formData.especificaciones,
+      observaciones: formData.observaciones,
+      encargado: selectedEncargado, // Usamos el valor del encargado seleccionado
+    };
+
+    // Realizar la solicitud POST para guardar los datos en la base de datos
+    axios
+      .post("http://localhost:5000/registrarActivos", dataToSend)
+      .then((response) => {
+        console.log("Activo guardado:", response.data);
+
+        // Si la solicitud es exitosa, agregar el activo a la lista de activos en Home
+        agregarActivo(response.data); // Agregar el nuevo activo al estado de Home
+        // Si la solicitud es exitosa, muestra el modal de éxito
+        setModalData({
+          titulo: "¡Operación Exitosa!",
+          mensaje: "El activo se ha registrado correctamente.",
+        });
+        setShowModal(true); // Mostrar el modal de éxito
+        setShowModalError(false); // Ocultar el modal de error
+
+        setFormData({
+          nombreActivo: "",
+          modelo: "",
+          marca: "",
+          tipoActivo: "",
+          numeroSerie: "",
+          procesoCompra: "",
+          proveedor: "",
+          ubicacion: "",
+          estado: "",
+          especificaciones: "",
+          observaciones: "",
+          encargado: "",
+        });
+      })
+      .catch((error) => {
+        console.error("Error al guardar el activo:", error);
+        // Si hay un error, muestra el modal de error
+        setModalDataError({
+          titulo: "Error al registrar",
+          mensaje: "Error al registrar el activo. Inténtalo de nuevo.",
+        });
+        setShowModalError(true); // Mostrar el modal de error
+        setShowModal(false);
+      });
   };
   const handleChangeEncargado = (e) => {
     setSelectedEncargado(e.target.value);
@@ -321,28 +391,14 @@ function FormularioActivo({ closeModal }) {
               <input
                 type="radio"
                 className="form-check-input"
-                id="segundaMano"
-                name="segundaMano"
-                value="segundamano"
+                id="operando"
+                name="operando"
+                value="operando"
                 onChange={handleEstadoChange}
-                checked={formData.estado === "segundamano"}
+                checked={formData.estado === "operando"}
               />
-              <label className="form-check-label" htmlFor="SegundaMano">
-                Segunda Mano
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                type="radio"
-                className="form-check-input"
-                id="estado3"
-                name="estado"
-                value="Estado 3"
-                onChange={handleEstadoChange}
-                checked={formData.estado === "Estado 3"}
-              />
-              <label className="form-check-label" htmlFor="estado3">
-                Estado 3
+              <label className="form-check-label" htmlFor="operando">
+                Operando
               </label>
             </div>
           </div>
@@ -432,8 +488,22 @@ function FormularioActivo({ closeModal }) {
           </button>
         </div>
       </form>
+
+      {/* Aquí pasamos `showModal` y `modalData` como props al SuccessModal */}
+      {showModal && (
+        <SuccessModal titulo={modalData.titulo} mensaje={modalData.mensaje} />
+      )}
+      {showModalError && (
+        <ErrorModal
+          titulo={modalDataError.titulo}
+          mensaje={modalDataError.mensaje}
+        />
+      )}
     </>
   );
 }
-
+FormularioActivo.propTypes = {
+  closeModal: PropTypes.func.isRequired,
+  agregarActivo: PropTypes.func.isRequired, // La propiedad titulo debe ser una funcion y es requerida
+};
 export default FormularioActivo;
