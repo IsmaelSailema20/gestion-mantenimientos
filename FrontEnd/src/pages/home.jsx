@@ -9,6 +9,7 @@ const Home = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 7; // Número de elementos por página
   const [username, setUsername] = useState("");
+  const [rol, setRol] = useState("");
   useEffect(() => {
     const fetchActivos = async () => {
       try {
@@ -24,6 +25,7 @@ const Home = () => {
       const decodedToken = parseJwt(token);
       if (decodedToken && decodedToken.username) {
         setUsername(decodedToken.username);
+        setRol(decodedToken.rol);
       } else {
         console.log("no username");
       }
@@ -103,19 +105,22 @@ const Home = () => {
         className="d-flex justify-content-between align-items-center px-4 py-2"
       >
         <div className="d-flex align-items-center">
-          <div
+          <button
+            className="btn"
             style={{
-              backgroundColor: "white",
-              color: "black",
-              padding: "10px 20px",
+              backgroundColor: rol === "admin" ? "white" : "gray", // Color gris para laboratorista
+              color: rol === "admin" ? "black" : "white", // Texto gris si es laboratorista
+              cursor: rol === "admin" ? "pointer" : "not-allowed",
               borderRadius: "35px",
               fontSize: "20px",
+              padding: "10px 20px",
               fontWeight: "bold",
-              whiteSpace: "nowrap",
+              whiteSpace: "nowrap", // Cursor para indicar deshabilitado
             }}
+            disabled={rol !== "admin"} // Desactivar el botón si no es admin
           >
             Mantenimientos
-          </div>
+          </button>
         </div>
         <div className="d-flex align-items-center">
           <button
