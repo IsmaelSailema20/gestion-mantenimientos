@@ -287,7 +287,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 value={formData.tipoActivo}
                 onChange={handleChange}
                 style={{
-                  padding: "10px",
+                  padding: "5px",
                   borderRadius: "5px",
                   width: "100%",
                 }}
