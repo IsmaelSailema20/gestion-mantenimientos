@@ -1,73 +1,92 @@
 const connection = require('../models/db');
 
 module.exports.registrarActivos = (req, res) => {
-    const {
-        nombreActivo,
-        modelo,
-        marca,
-        tipoActivo,
-        numeroSerie,
-        procesoCompra,
-        proveedor,
-        ubicacion,
-        estado,
-        especificaciones,
-        observaciones,
-        encargado,
-    } = req.body; // Los datos que recibes desde el frontend
+  const {
+    nombreActivo,
+    modelo,
+    marca,
+    tipoActivo,
+    numeroSerie,
+    procesoCompra,
+    proveedor,
+    bloque,  // id_edificio
+    laboratorio,  // id_laboratorio
+    estado,
+    especificaciones,
+    observaciones,
+    encargado,
+  } = req.body;
 
-    // Validar los datos antes de insertarlos
-    let errors = [];
-    if (!nombreActivo) errors.push({ field: 'nombreActivo', message: 'El nombre del activo es obligatorio' });
-    if (!modelo) errors.push({ field: 'modelo', message: 'El modelo es obligatorio' });
-    if (!marca) errors.push({ field: 'marca', message: 'La marca es obligatoria' });
-    if (!tipoActivo) errors.push({ field: 'tipoActivo', message: 'El tipo de activo es obligatorio' });
-    if (!numeroSerie) errors.push({ field: 'numeroSerie', message: 'El número de serie es obligatorio' });
-    if (!procesoCompra) errors.push({ field: 'procesoCompra', message: 'El proceso de compra es obligatorio' });
-    if (!especificaciones) errors.push({ field: 'especificaciones', message: 'Las especificaciones son obligatorias' });
-    if (!observaciones) errors.push({ field: 'observaciones', message: 'Las observaciones son obligatorias' });
-    if (!estado) errors.push({ field: 'estado', message: 'El estado es obligatorio' });
-    if (!proveedor) errors.push({ field: 'proveedor', message: 'El proveedor es obligatorio' });
-    if (!ubicacion) errors.push({ field: 'ubicacion', message: 'La ubicación es obligatoria' });
-    if (!encargado) errors.push({ field: 'encargado', message: 'El encargado es obligatorio' });
+  // Primero, verifiquemos si ya existe la relación entre bloque (id_edificio) y laboratorio (id_laboratorio)
+  const checkQuery = `
+    SELECT id_laboratio_edificio
+    FROM Edificio_Laboratorio
+    WHERE id_edificio = ? AND id_laboratorio = ?
+  `;
 
-    if (errors.length > 0) {
-        return res.status(400).json({ errors });
+  connection.query(checkQuery, [bloque, laboratorio], (err, results) => {
+    if (err) {
+      console.error("Error al verificar la relación:", err);
+      return res.status(500).json({ error: "Error al verificar la relación" });
     }
 
-    // Si todo es válido, proceder con la consulta SQL
+    let idUbicacion = null;
+
+    if (results.length > 0) {
+      // Si existe, usamos la relación existente
+      idUbicacion = results[0].id_laboratio_edificio;
+    } else {
+      // Si no existe, insertamos una nueva relación
+      const insertQuery = `
+        INSERT INTO Edificio_Laboratorio (id_edificio, id_laboratorio)
+        VALUES (?, ?)
+      `;
+
+      connection.query(insertQuery, [bloque, laboratorio], (err, insertResults) => {
+        if (err) {
+          console.error("Error al insertar relación:", err);
+          return res.status(500).json({ error: "Error al insertar relación" });
+        }
+
+        // Obtenemos el id de la nueva relación
+        idUbicacion = insertResults.insertId;
+      });
+    }
+
+    // Ahora insertamos el nuevo activo en la tabla Activos
     const query = `
-        INSERT INTO Activos (
-          numero_serie, nombre, modelo, marca, proceso_compra, tipo, estado, 
-          id_ubicacion, id_proveedor, especificaciones, observaciones, id_laboratorista
-        )
-        VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-        )
+      INSERT INTO Activos (
+        numero_serie, nombre, modelo, marca, proceso_compra, tipo, estado, 
+        id_ubicacion, id_proveedor, especificaciones, observaciones, id_laboratorista
+      )
+      VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
     `;
 
     connection.query(
-        query,
-        [
-            numeroSerie,
-            nombreActivo,
-            modelo,
-            marca,
-            procesoCompra,
-            tipoActivo,
-            estado,
-            ubicacion,   // id_ubicacion
-            proveedor,   // id_proveedor
-            especificaciones,
-            observaciones,
-            encargado,   // id_laboratorista (encargado)
-        ],
-        (err, results) => {
-            if (err) {
-                console.error("Error al guardar el activo:", err);
-                return res.status(500).json({ error: "Error al guardar el activo", details: err });
-            }
-            res.status(201).json({ message: "Activo registrado con éxito", data: results });
+      query,
+      [
+        numeroSerie,
+        nombreActivo,
+        modelo,
+        marca,
+        procesoCompra,
+        tipoActivo,
+        estado,
+        idUbicacion,  // Usamos el id_laboratio_edificio (id_ubicacion)
+        proveedor,
+        especificaciones,
+        observaciones,
+        encargado,
+      ],
+      (err, results) => {
+        if (err) {
+          console.error("Error al guardar el activo:", err);
+          return res.status(500).json({ error: "Error al guardar el activo" });
         }
+        res.status(201).json({ message: "Activo registrado con éxito", data: results });
+      }
     );
+  });
 };
