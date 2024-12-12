@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken'); // Corrige el nombre del paquete
 
 module.exports.login = (req, res) => {
     const { username, password } = req.body;
-    const cons = "SELECT * FROM USUARIOS WHERE USERNAME = ? AND PASSWORD = ?";
+    const cons = "SELECT * FROM USUARIOS WHERE USERNAME = ? AND CAST(AES_DECRYPT(password, 'xyz123') AS CHAR) = ?";
 
     try {
         connection.query(cons, [username, password], (err, result) => {
