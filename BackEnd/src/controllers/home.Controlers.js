@@ -2,18 +2,22 @@ const connection = require('../models/db');
 
 module.exports.getActivos = (req, res) => {
     const query = `
-        SELECT 
-	a.id_activo as id,
-            a.numero_serie AS Codigo,
-            a.nombre AS Nombre,
-            a.tipo AS Tipo,
-            u.nombre AS Ubicación,
-            a.estado AS Estado
-        FROM 
-            activos a
-        LEFT JOIN 
-            ubicaciones u ON a.id_ubicacion = u.id_ubicacion
-            ORDER by a.id_activo DESC;
+      SELECT 
+    a.id_activo,
+    a.numero_serie,
+    a.nombre AS nombre_activo,
+    a.tipo AS tipo_activo,
+    a.estado,
+    CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion
+FROM 
+    Activos a
+JOIN 
+    Edificio_Laboratorio el ON a.id_ubicacion = el.id_laboratio_edificio
+JOIN 
+    Edificios e ON el.id_edificio = e.id_edificio
+JOIN 
+    Laboratorios l ON el.id_laboratorio = l.id_laboratorio
+    ORDER by a.id_activo DESC;	
     `;
 
     try {

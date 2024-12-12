@@ -29,11 +29,11 @@ const TablaActivos = ({ activos }) => {
           {activos.length > 0 ? (
             activos.map((activo, index) => (
               <tr key={index} style={{ height: "60px" }}>
-                <td>{activo.Codigo}</td>
-                <td>{activo.Nombre}</td>
-                <td>{activo.Tipo}</td>
-                <td>{activo.Ubicación}</td>
-                <td>{activo.Estado}</td>
+                <td>{activo.numero_serie}</td>
+                <td>{activo.nombre_activo}</td>
+                <td>{activo.tipo_activo}</td>
+                <td>{activo.ubicacion}</td>
+                <td>{activo.estado}</td>
                 <td className="text-center">
                   <button
                     className="btn d-flex align-items-center"

@@ -13,7 +13,8 @@ const Home = () => {
   useEffect(() => {
     const fetchActivos = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/activos"); // Ajusta la URL según tu configuración
+        const response = await axios.get("http://localhost:5000/activos");
+
         setActivos(response.data);
       } catch (error) {
         console.error("Error al obtener los datos:", error);

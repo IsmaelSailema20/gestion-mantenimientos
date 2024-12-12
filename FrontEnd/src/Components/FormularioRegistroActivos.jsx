@@ -5,12 +5,14 @@ import ErrorModal from "./ErrorModal";
 import PropTypes from "prop-types";
 
 function FormularioActivo({ closeModal, agregarActivo }) {
+  const [bloques, setBloques] = useState([]); // Estado para los bloques (edificios)
+  const [laboratorios, setLaboratorios] = useState([]); // Estado para los laboratorios
+  const [selectedBloque, setSelectedBloque] = useState(""); // Estado para el bloque seleccionado
+  const [selectedLaboratorio, setSelectedLaboratorio] = useState(""); // Estado para el laboratorio seleccionado
   const [encargados, setEncargados] = useState([]);
   const [selectedEncargado, setSelectedEncargado] = useState("");
   const [proveedores, setProveedores] = useState([]);
   const [selectedProveedor, setSelectedProveedor] = useState("");
-  const [ubicaciones, setUbicaciones] = useState([]);
-  const [selectedUbicacion, setSelectedUbicacion] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
@@ -26,7 +28,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     numeroSerie: "",
     procesoCompra: "",
     proveedor: "",
-    ubicacion: "",
+    bloque: "",
+    laboratorio: "",
     estado: "",
     especificaciones: "",
     observaciones: "",
@@ -40,7 +43,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     numeroSerie: false,
     procesoCompra: false,
     proveedor: false,
-    ubicacion: false,
+    bloque: false,
+    laboratorio: false,
     estado: false,
     especificaciones: false,
     observaciones: false,
@@ -95,11 +99,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       setShowModalError(true); // Mostrar el modal de error
       return; // No enviar el formulario
     }
-    console.log(formData);
-    // Resetear los estados de los modales antes de enviar una nueva solicitud
-    setShowModal(false); // Ocultar el modal de éxito
-    setShowModalError(false); // Ocultar el modal de error
-
+    setShowModalError(false);
     // Construir los datos que quieres enviar al backend
     const dataToSend = {
       nombreActivo: formData.nombreActivo,
@@ -109,7 +109,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       numeroSerie: formData.numeroSerie,
       procesoCompra: formData.procesoCompra,
       proveedor: selectedProveedor, // Usamos el valor del proveedor seleccionado
-      ubicacion: selectedUbicacion, // Usamos el valor de la ubicación seleccionada
+      bloque: selectedBloque, // El bloque seleccionado
+      laboratorio: selectedLaboratorio, // El laboratorio seleccionado
       estado: formData.estado,
       especificaciones: formData.especificaciones,
       observaciones: formData.observaciones,
@@ -124,6 +125,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
 
         // Si la solicitud es exitosa, agregar el activo a la lista de activos en Home
         agregarActivo(response.data); // Agregar el nuevo activo al estado de Home
+
         // Si la solicitud es exitosa, muestra el modal de éxito
         setModalData({
           titulo: "¡Operación Exitosa!",
@@ -140,7 +142,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
           numeroSerie: "",
           procesoCompra: "",
           proveedor: "",
-          ubicacion: "",
+          bloque: "",
+          laboratorio: "",
           estado: "",
           especificaciones: "",
           observaciones: "",
@@ -169,28 +172,19 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     formData.proveedor = e.target.value;
   };
 
-  const handleChangeUbicacion = (e) => {
-    setSelectedUbicacion(e.target.value);
-    formData.ubicacion = e.target.value;
-  };
-
   useEffect(() => {
     // Hacer múltiples solicitudes en paralelo utilizando Promise.all
     Promise.all([
       axios.get("http://localhost:5000/laboratoristas"),
       axios.get("http://localhost:5000/proveedores"),
-      axios.get("http://localhost:5000/ubicaciones"),
+      axios.get("http://localhost:5000/edificios"),
     ])
       .then(
-        ([
-          laboratoristasResponse,
-          proveedoresResponse,
-          ubicacionesResponse,
-        ]) => {
+        ([laboratoristasResponse, proveedoresResponse, edificiosResponse]) => {
           // Asigna los datos de las respuestas a sus respectivos estados
           setEncargados(laboratoristasResponse.data);
           setProveedores(proveedoresResponse.data);
-          setUbicaciones(ubicacionesResponse.data);
+          setBloques(edificiosResponse.data);
         }
       )
       .catch((error) => {
@@ -200,6 +194,32 @@ function FormularioActivo({ closeModal, agregarActivo }) {
 
   const getInputClass = (field) => {
     return errors[field] ? "form-control is-invalid" : "form-control";
+  };
+
+  // Obtener los laboratorios según el bloque seleccionado
+  const handleBloqueChange = (e) => {
+    const idEdificio = e.target.value;
+    setSelectedBloque(idEdificio);
+    formData.bloque = e.target.value; // Establecer el bloque seleccionado
+
+    // Obtener los laboratorios asociados a ese bloque
+    if (idEdificio) {
+      axios
+        .get(`http://localhost:5000/laboratorios/${idEdificio}`) // Endpoint para obtener laboratorios por bloque
+        .then((response) => {
+          setLaboratorios(response.data); // Guardar los laboratorios en el estado
+        })
+        .catch((error) => {
+          console.error("Error al obtener laboratorios:", error);
+        });
+    } else {
+      setLaboratorios([]); // Si no hay bloque seleccionado, limpiar los laboratorios
+    }
+  };
+  // Manejar el cambio en el laboratorio seleccionado
+  const handleLaboratorioChange = (e) => {
+    setSelectedLaboratorio(e.target.value);
+    formData.laboratorio = e.target.value; // Establecer el laboratorio seleccionado
   };
 
   return (
@@ -319,6 +339,31 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 placeholder="Proceso de compra"
               />
             </div>
+            <div className="form-group">
+              <label
+                htmlFor="bloque"
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "10px",
+                  marginTop: "10px",
+                }}
+              >
+                Bloque
+              </label>
+              <select
+                className={getInputClass("bloque")}
+                value={selectedBloque}
+                onChange={handleBloqueChange}
+                id="bloque"
+              >
+                <option value="">Seleccione un bloque</option>
+                {bloques.map((bloque) => (
+                  <option key={bloque.id_edificio} value={bloque.id_edificio}>
+                    {bloque.nombre_edificio}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Columna 2 */}
@@ -394,36 +439,39 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 ))}
               </select>
             </div>
+
+            <div className="form-group">
+              <label
+                htmlFor="laboratorio"
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "10px",
+                  marginTop: "10px",
+                }}
+              >
+                Laboratorio
+              </label>
+              <select
+                id="laboratorio"
+                className={getInputClass("laboratorio")}
+                value={selectedLaboratorio}
+                onChange={handleLaboratorioChange}
+                disabled={!selectedBloque} // Deshabilitar si no hay bloque seleccionado
+              >
+                <option value="">Seleccione un laboratorio</option>
+                {laboratorios.map((laboratorio) => (
+                  <option
+                    key={laboratorio.id_laboratorio}
+                    value={laboratorio.id_laboratorio}
+                  >
+                    {laboratorio.nombre_laboratorio}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
-        <div className="form-group">
-          <label
-            htmlFor="ubicacion"
-            style={{
-              fontWeight: "bold",
-              marginBottom: "10px",
-              marginTop: "10px",
-            }}
-          >
-            Bloque y Laboratorio
-          </label>
-          <select
-            className={getInputClass("ubicacion")}
-            value={selectedUbicacion}
-            onChange={handleChangeUbicacion}
-            id="ubicacion"
-          >
-            <option value="">Seleccione una ubicacion</option>
-            {ubicaciones.map((ubicacion) => (
-              <option
-                key={ubicacion.id_ubicacion}
-                value={ubicacion.id_ubicacion}
-              >
-                {ubicacion.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
+
         <div className="form-group">
           <label
             style={{
