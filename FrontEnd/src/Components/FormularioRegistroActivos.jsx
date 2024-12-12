@@ -503,12 +503,26 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 className="form-check-input"
                 id="operando"
                 name="operando"
-                value="operando"
+                value="Operando"
                 onChange={handleEstadoChange}
-                checked={formData.estado === "operando"}
+                checked={formData.estado === "Operando"}
               />
               <label className="form-check-label" htmlFor="operando">
                 Operando
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                type="radio"
+                className="form-check-input"
+                id="nuevo"
+                name="proceso_instalacion"
+                value="En Proceso de instalacion"
+                onChange={handleEstadoChange}
+                checked={formData.estado === "En Proceso de instalacion"}
+              />
+              <label className="form-check-label" htmlFor="Nuevo">
+                En proceso de instalación
               </label>
             </div>
           </div>
