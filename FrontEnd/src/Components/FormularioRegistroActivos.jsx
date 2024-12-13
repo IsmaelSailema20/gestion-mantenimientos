@@ -63,7 +63,10 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     setFormData({ ...formData, estado: e.target.value });
     setErrors({ ...errors, estado: e.target.value.trim() === "" });
   };
-
+  function capitalizeFirstLetter(str) {
+    if (!str) return ""; // Manejar cadenas vacías
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
   // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -260,7 +263,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             type="text"
             className={getInputClass("nombreActivo")}
             id="nombreActivo"
-            value={formData.nombreActivo}
+            value={capitalizeFirstLetter(formData.nombreActivo)}
             onChange={handleChange}
             placeholder="Nombre del activo"
           />
@@ -304,7 +307,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
               <select
                 className={getInputClass("tipoActivo")}
                 id="tipoActivo"
-                value={formData.tipoActivo}
+                value={capitalizeFirstLetter(formData.tipoActivo)}
                 onChange={handleChange}
                 style={{
                   padding: "5px",
@@ -313,8 +316,8 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 }}
               >
                 <option value="">Seleccione el tipo de activo</option>
-                <option value="informático">Informático</option>
-                <option value="no informático">No Informático</option>
+                <option value="Informático">Informático</option>
+                <option value="No informático">No Informático</option>
               </select>
             </div>
 
@@ -334,7 +337,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 type="text"
                 className={getInputClass("procesoCompra")}
                 id="procesoCompra"
-                value={formData.procesoCompra}
+                value={capitalizeFirstLetter(formData.procesoCompra)}
                 onChange={handleChange}
                 placeholder="Proceso de compra"
               />
@@ -406,7 +409,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
                 type="text"
                 className={getInputClass("numeroSerie")}
                 id="numeroSerie"
-                value={formData.numeroSerie}
+                value={formData.numeroSerie.toUpperCase()}
                 onChange={handleChange}
                 placeholder="Número de serie"
               />
@@ -543,7 +546,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             maxLength="500"
             className={getInputClass("especificaciones")}
             id="especificaciones"
-            value={formData.especificaciones}
+            value={capitalizeFirstLetter(formData.especificaciones)}
             onChange={handleChange}
             placeholder="Especificaciones"
             rows="3"
@@ -566,7 +569,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
             maxLength="500"
             className={getInputClass("observaciones")}
             id="observaciones"
-            value={formData.observaciones}
+            value={capitalizeFirstLetter(formData.observaciones)}
             onChange={handleChange}
             placeholder="Observaciones"
             rows="3"
@@ -600,15 +603,15 @@ function FormularioActivo({ closeModal, agregarActivo }) {
         </div>
 
         <div className="d-flex justify-content-between">
-          <button type="submit" className="btn-principal text-white my-3">
-            Guardar
-          </button>
           <button
             type="button"
             className="btn-principal text-white my-3"
             onClick={closeModal}
           >
             Cancelar
+          </button>
+          <button type="submit" className="btn-principal text-white my-3">
+            Guardar
           </button>
         </div>
       </form>

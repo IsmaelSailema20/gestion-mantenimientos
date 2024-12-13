@@ -9,6 +9,20 @@
 .bg-principal {
   background-color: var(--uta);
 }
+.btn-principal {
+  background-color: #cd3333;
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-principal:hover {
+  background-color:  #bd5454fd;
+  color: #ffffff;
+}
+
+.hover-effect {
+  cursor: pointer;
+}
 
 /* Personalizar la clase .btn-primary para usar el color --button */
 .btn-principal {
