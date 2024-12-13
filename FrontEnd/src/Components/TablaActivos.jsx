@@ -1,5 +1,8 @@
 import PropTypes from "prop-types";
-
+function capitalizeFirstLetter(str) {
+  if (!str) return ""; // Manejar cadenas vacías
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 const TablaActivos = ({ activos }) => {
   return (
     <div className="table-responsive">
@@ -31,9 +34,9 @@ const TablaActivos = ({ activos }) => {
               <tr key={index} style={{ height: "60px" }}>
                 <td>{activo.numero_serie}</td>
                 <td>{activo.nombre_activo}</td>
-                <td>{activo.tipo_activo}</td>
+                <td>{capitalizeFirstLetter(activo.tipo_activo)}</td>
                 <td>{activo.ubicacion}</td>
-                <td>{activo.estado}</td>
+                <td>{capitalizeFirstLetter(activo.estado)}</td>
                 <td className="text-center">
                   <button
                     className="btn d-flex align-items-center"
