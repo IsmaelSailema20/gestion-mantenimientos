@@ -3,6 +3,9 @@ import TablaActivos from "../Components/TablaActivos";
 import FormularioRegistroActivos from "../Components/FormularioRegistroActivos";
 import axios from "axios";
 import { parseJwt } from "../MAIN/Main";
+import ExcelReader from "../Components/ExcelReader";
+import  { useRef } from "react";
+
 const Home = () => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para mostrar el formulario
   const [activos, setActivos] = useState([]);
@@ -93,10 +96,15 @@ const Home = () => {
         console.error("Error al obtener los datos actualizados:", error);
       });
   };
+  const excelReaderRef = useRef();
 
+  const handleButtonClick = () => {
+    if (excelReaderRef.current) {
+      excelReaderRef.current.triggerFileUpload();
+    }
+  };
   return (
     <>
-      {/* Cabecera */}
       <div
         style={{
           backgroundColor: "rgb(163, 33, 38)",
@@ -153,9 +161,11 @@ const Home = () => {
           <button
             className="btn"
             style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+            onClick={handleButtonClick}
           >
             Registro por Lotes
           </button>
+          <ExcelReader ref={excelReaderRef} />
         </div>
 
         {/* Modal para mostrar el formulario */}
