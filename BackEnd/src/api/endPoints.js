@@ -9,7 +9,10 @@ const {getLaboratoriosPorBloque} = require('../controllers/laboratoriosPorBloque
 const {registrarActivos} = require('../controllers/registrarActivosController.js');
 const { getEdificios } = require('../controllers/edificiosController.js'); 
 const { loteController } = require('../controllers/loteController.js'); 
-
+const { getTipoActivos } = require('../controllers/tipoActivoController.js');
+const { getMarcasPorActivo } = require('../controllers/marcasController.js');
+const { getModelosPorMarca } = require('../controllers/modelosController.js');
+const { actualizarActivos } = require('../controllers/editarActivosController.js');
 router.get('/activos', getActivos);
 router.get('/ping',ping);
 router.post('/login',login);
@@ -18,6 +21,9 @@ router.get('/proveedores',getProveedores);
 router.get('/edificios', getEdificios);
 router.get('/laboratorios/:idEdificio', getLaboratoriosPorBloque);
 router.post('/registrarActivos',registrarActivos);
-
+router.get('/tiposActivos',getTipoActivos);
+router.get('/marcas/:idActivo', getMarcasPorActivo);
+router.get('/modelos/:idMarca', getModelosPorMarca);
 router.post('/registrarLoteActivos',loteController);
+router.put('/actualizarActivo/:id_activo', actualizarActivos);
 module.exports =router; 

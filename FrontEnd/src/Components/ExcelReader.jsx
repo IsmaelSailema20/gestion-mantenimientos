@@ -34,6 +34,8 @@ const ExcelReader = forwardRef((_, ref) => {
     Laboratorio: "laboratorio",
     Estado: "estado",
     Encargado: "encargado",
+    Especificaciones: "especificaciones",
+    Observaciones: "observaciones",
   };
 
   useImperativeHandle(ref, () => ({
@@ -45,8 +47,8 @@ const ExcelReader = forwardRef((_, ref) => {
   useEffect(() => {
     if (showSuccessModal || showErrorModal) {
       const timer = setTimeout(() => {
-        window.location.reload(); // Recargar la pagina porque no se porque no 
-        //se resetea el stado del componente para que siga funcionando normalmente  
+        window.location.reload(); // Recargar la pagina porque no se porque no
+        //se resetea el stado del componente para que siga funcionando normalmente
       }, 3003);
 
       return () => clearTimeout(timer);
@@ -72,7 +74,9 @@ const ExcelReader = forwardRef((_, ref) => {
       if (missingFields.length > 0) {
         setErrorModalData({
           titulo: "Error de Validación",
-          mensaje: `El archivo no contiene los campos requeridos: ${missingFields.join(", ")}`,
+          mensaje: `El archivo no contiene los campos requeridos: ${missingFields.join(
+            ", "
+          )}`,
         });
         setShowErrorModal(true);
         return;
@@ -80,9 +84,12 @@ const ExcelReader = forwardRef((_, ref) => {
 
       const transformedData = jsonData.map((row) => {
         const transformedRow = {};
-        for (const [excelField, variableName] of Object.entries(requiredFields)) {
+        for (const [excelField, variableName] of Object.entries(
+          requiredFields
+        )) {
           const matchingKey = Object.keys(row).find(
-            (key) => key.trim().toLowerCase() === excelField.trim().toLowerCase()
+            (key) =>
+              key.trim().toLowerCase() === excelField.trim().toLowerCase()
           );
           transformedRow[variableName] = matchingKey ? row[matchingKey] : null;
         }

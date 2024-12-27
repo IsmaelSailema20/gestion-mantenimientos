@@ -1,6 +1,7 @@
 const connection = require('../models/db');
 
-module.exports.registrarActivos = (req, res) => {
+module.exports.actualizarActivos = (req, res) => {
+  const { id_activo } = req.params; // Obtén el ID del activo desde los parámetros
   const {
     numeroSerie,
     procesoCompra,
@@ -12,8 +13,54 @@ module.exports.registrarActivos = (req, res) => {
     id_modelo,
     id_laboratorista,
     especificaciones,
-    observaciones
+    observaciones,
   } = req.body;
+
+  // Función para actualizar el activo
+  const actualizarActivo = (ubicacionId) => {
+    const updateActivoQuery = `
+      UPDATE Activos
+      SET
+        numero_serie = ?,
+        proceso_compra = ?,
+        tipo = ?,
+        estado = ?,
+        id_ubicacion = ?,
+        id_proveedor = ?,
+        id_modelo = ?,
+        id_laboratorista = ?,
+        especificaciones = ?,
+        observaciones = ?
+      WHERE
+        id_activo = ?
+    `;
+
+    connection.query(
+      updateActivoQuery,
+      [
+        numeroSerie,
+        procesoCompra,
+        tipo,
+        estado,
+        ubicacionId,
+        id_proveedor,
+        id_modelo,
+        id_laboratorista,
+        especificaciones,
+        observaciones,
+        id_activo, // ID del activo que se está actualizando (desde req.params)
+      ],
+      (err, activoResults) => {
+        if (err) {
+          console.error("Error al actualizar el activo:", err);
+          return res.status(500).json({ error: "Error al actualizar el activo" });
+        }
+        res
+          .status(200)
+          .json({ message: "Activo actualizado con éxito", data: activoResults });
+      }
+    );
+  };
 
   // Verificamos si la ubicación (bloque + laboratorio) ya existe en la tabla
   const checkUbicacionQuery = `
@@ -27,7 +74,7 @@ module.exports.registrarActivos = (req, res) => {
     [id_ubicacion, id_laboratorio],
     (err, ubicacionResults) => {
       if (err) {
-        console.error("Error al verificar la relación:", err);
+        console.error("Error al verificar la relación de ubicación:", err);
         return res.status(500).json({ error: "Error al verificar la relación de ubicación" });
       }
 
@@ -36,6 +83,7 @@ module.exports.registrarActivos = (req, res) => {
       if (ubicacionResults.length > 0) {
         // Si existe, obtenemos el ID de la ubicación
         idUbicacion = ubicacionResults[0].id_laboratio_edificio;
+        actualizarActivo(idUbicacion); // Continuar con la actualización del activo
       } else {
         // Si no existe, creamos una nueva ubicación
         const insertUbicacionQuery = `
@@ -52,50 +100,9 @@ module.exports.registrarActivos = (req, res) => {
               return res.status(500).json({ error: "Error al insertar la relación de ubicación" });
             }
             idUbicacion = insertResults.insertId;
-            insertarActivo(idUbicacion); // Continuar con la inserción del activo
+            actualizarActivo(idUbicacion); // Continuar con la actualización del activo
           }
         );
-      }
-
-      // Función para insertar el activo
-      const insertarActivo = (ubicacionId) => {
-        const insertActivoQuery = `
-          INSERT INTO Activos (
-            numero_serie, proceso_compra, tipo, estado, 
-            id_ubicacion, id_proveedor, id_modelo, id_laboratorista,especificaciones,observaciones
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        connection.query(
-          insertActivoQuery,
-          [
-            numeroSerie,
-            procesoCompra,
-            tipo,
-            estado,
-            ubicacionId,
-            id_proveedor,
-            id_modelo,
-            id_laboratorista,
-            especificaciones,
-            observaciones
-          ],
-          (err, activoResults) => {
-            if (err) {
-              console.error("Error al insertar el activo:", err);
-              return res.status(500).json({ error: "Error al registrar el activo" });
-            }
-            res
-              .status(201)
-              .json({ message: "Activo registrado con éxito", data: activoResults });
-          }
-        );
-      };
-
-      // Si ya existe la ubicación, insertamos directamente el activo
-      if (idUbicacion) {
-        insertarActivo(idUbicacion);
       }
     }
   );
