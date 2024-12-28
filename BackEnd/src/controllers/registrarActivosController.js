@@ -2,91 +2,101 @@ const connection = require('../models/db');
 
 module.exports.registrarActivos = (req, res) => {
   const {
-    nombreActivo,
-    modelo,
-    marca,
-    tipoActivo,
     numeroSerie,
     procesoCompra,
-    proveedor,
-    bloque,  // id_edificio
-    laboratorio,  // id_laboratorio
+    tipo,
     estado,
+    id_proveedor,
+    id_laboratorio,
+    id_ubicacion,
+    id_modelo,
+    id_laboratorista,
     especificaciones,
-    observaciones,
-    encargado,
+    observaciones
   } = req.body;
 
-  // Primero, verifiquemos si ya existe la relación entre bloque (id_edificio) y laboratorio (id_laboratorio)
-  const checkQuery = `
-    SELECT id_laboratio_edificio
-    FROM Edificio_Laboratorio
+  // Verificamos si la ubicación (bloque + laboratorio) ya existe en la tabla
+  const checkUbicacionQuery = `
+    SELECT id_laboratio_edificio 
+    FROM Edificio_Laboratorio 
     WHERE id_edificio = ? AND id_laboratorio = ?
   `;
 
-  connection.query(checkQuery, [bloque, laboratorio], (err, results) => {
-    if (err) {
-      console.error("Error al verificar la relación:", err);
-      return res.status(500).json({ error: "Error al verificar la relación" });
-    }
-
-    let idUbicacion = null;
-
-    if (results.length > 0) {
-      // Si existe, usamos la relación existente
-      idUbicacion = results[0].id_laboratio_edificio;
-    } else {
-      // Si no existe, insertamos una nueva relación
-      const insertQuery = `
-        INSERT INTO Edificio_Laboratorio (id_edificio, id_laboratorio)
-        VALUES (?, ?)
-      `;
-
-      connection.query(insertQuery, [bloque, laboratorio], (err, insertResults) => {
-        if (err) {
-          console.error("Error al insertar relación:", err);
-          return res.status(500).json({ error: "Error al insertar relación" });
-        }
-
-        // Obtenemos el id de la nueva relación
-        idUbicacion = insertResults.insertId;
-      });
-    }
-
-    // Ahora insertamos el nuevo activo en la tabla Activos
-    const query = `
-      INSERT INTO Activos (
-        numero_serie, nombre, modelo, marca, proceso_compra, tipo, estado, 
-        id_ubicacion, id_proveedor, especificaciones, observaciones, id_laboratorista
-      )
-      VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-    `;
-
-    connection.query(
-      query,
-      [
-        numeroSerie,
-        nombreActivo,
-        modelo,
-        marca,
-        procesoCompra,
-        tipoActivo,
-        estado,
-        idUbicacion,  // Usamos el id_laboratio_edificio (id_ubicacion)
-        proveedor,
-        especificaciones,
-        observaciones,
-        encargado,
-      ],
-      (err, results) => {
-        if (err) {
-          console.error("Error al guardar el activo:", err);
-          return res.status(500).json({ error: "Error al guardar el activo" });
-        }
-        res.status(201).json({ message: "Activo registrado con éxito", data: results });
+  connection.query(
+    checkUbicacionQuery,
+    [id_ubicacion, id_laboratorio],
+    (err, ubicacionResults) => {
+      if (err) {
+        console.error("Error al verificar la relación:", err);
+        return res.status(500).json({ error: "Error al verificar la relación de ubicación" });
       }
-    );
-  });
+
+      let idUbicacion = null;
+
+      if (ubicacionResults.length > 0) {
+        // Si existe, obtenemos el ID de la ubicación
+        idUbicacion = ubicacionResults[0].id_laboratio_edificio;
+      } else {
+        // Si no existe, creamos una nueva ubicación
+        const insertUbicacionQuery = `
+          INSERT INTO Edificio_Laboratorio (id_edificio, id_laboratorio)
+          VALUES (?, ?)
+        `;
+
+        connection.query(
+          insertUbicacionQuery,
+          [id_ubicacion, id_laboratorio],
+          (err, insertResults) => {
+            if (err) {
+              console.error("Error al insertar la ubicación:", err);
+              return res.status(500).json({ error: "Error al insertar la relación de ubicación" });
+            }
+            idUbicacion = insertResults.insertId;
+            insertarActivo(idUbicacion); // Continuar con la inserción del activo
+          }
+        );
+      }
+
+      // Función para insertar el activo
+      const insertarActivo = (ubicacionId) => {
+        const insertActivoQuery = `
+          INSERT INTO Activos (
+            numero_serie, proceso_compra, tipo, estado, 
+            id_ubicacion, id_proveedor, id_modelo, id_laboratorista,especificaciones,observaciones
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        connection.query(
+          insertActivoQuery,
+          [
+            numeroSerie,
+            procesoCompra,
+            tipo,
+            estado,
+            ubicacionId,
+            id_proveedor,
+            id_modelo,
+            id_laboratorista,
+            especificaciones,
+            observaciones
+          ],
+          (err, activoResults) => {
+            if (err) {
+              console.error("Error al insertar el activo:", err);
+              return res.status(500).json({ error: "Error al registrar el activo" });
+            }
+            res
+              .status(201)
+              .json({ message: "Activo registrado con éxito", data: activoResults });
+          }
+        );
+      };
+
+      // Si ya existe la ubicación, insertamos directamente el activo
+      if (idUbicacion) {
+        insertarActivo(idUbicacion);
+      }
+    }
+  );
 };

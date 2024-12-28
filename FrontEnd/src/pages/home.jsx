@@ -6,7 +6,12 @@ import { parseJwt } from "../MAIN/Main";
 import ExcelReader from "../Components/ExcelReader";
 import { useRef } from "react";
 import FormularioMantenimiento from "../Components/FormularioMantenimiento";
+import { useRef } from "react";
+import MantenimientosPrincipal from "../Components/MantenimientosPrincipal";
+
 const Home = () => {
+  const [vistaActual, setVistaActual] = useState("inicio"); // Estado para manejar la vista actual
+
   const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para mostrar el formulario
   const [activos, setActivos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -24,6 +29,22 @@ const Home = () => {
         console.error("Error al obtener los datos:", error);
       }
     };
+  const [activoSeleccionado, setActivoSeleccionado] = useState(null); // Activo seleccionado para editar
+  const [esEdicion, setEsEdicion] = useState(false); // Bandera para el modo edición o creación
+
+  const cambiarAVista = (vista) => {
+    setVistaActual(vista); // Cambia la vista actual
+  };
+  const fetchActivos = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/activos");
+      console.log("Datos obtenidos:", response.data);
+      setActivos(response.data); // Actualizar la tabla con los datos más recientes
+    } catch (error) {
+      console.error("Error al obtener los datos:", error);
+    }
+  };
+  useEffect(() => {
     fetchActivos();
     const token = localStorage.getItem("token");
     if (token) {
@@ -38,11 +59,7 @@ const Home = () => {
       console.log("no token");
     }
   }, []);
-  /*
-    const handleActualizar = (activo) => {
-        console.log("Actualizar activo:", activo);
-        // Agrega tu lógica para actualizar el activo aquí
-    };*/
+
   const CerrarSesion = () => {
     localStorage.removeItem("token");
     window.location.reload();
@@ -80,7 +97,15 @@ const Home = () => {
 
   // Función para manejar el clic en "Registro Individual"
   const handleRegistroIndividual = () => {
-    setMostrarFormulario(true); // Muestra el formulario de registro
+    setEsEdicion(false); // No es edición
+    setActivoSeleccionado(null); // Limpiar activo seleccionado
+    setMostrarFormulario(true); // Mostrar el modal
+  };
+
+  const handleEditarActivo = (activo) => {
+    setEsEdicion(true); // Activar modo edición
+    setActivoSeleccionado(activo); // Cargar el activo seleccionado
+    setMostrarFormulario(true); // Mostrar el modal
   };
 
   // Función para cerrar el modal
@@ -110,6 +135,15 @@ const Home = () => {
       excelReaderRef.current.triggerFileUpload();
     }
   };
+  const actualizarActivo = (activoActualizado) => {
+    setActivos((prevActivos) =>
+      prevActivos.map((activo) =>
+        activo.id_activo === activoActualizado.id_activo
+          ? activoActualizado
+          : activo
+      )
+    );
+  };
   return (
     <>
       <div
@@ -122,6 +156,11 @@ const Home = () => {
       >
         <div className="d-flex align-items-center">
           <button
+            onClick={() =>
+              vistaActual === "inicio"
+                ? cambiarAVista("mantenimientos")
+                : cambiarAVista("inicio")
+            }
             className="btn"
             style={{
               backgroundColor: rol === "admin" ? "white" : "gray",
@@ -136,7 +175,7 @@ const Home = () => {
             disabled={rol !== "admin"}
             onClick={handleMostrarRegFormulario}
           >
-            Mantenimientos
+            {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
           </button>
         </div>
         <div className="d-flex align-items-center">
@@ -240,6 +279,87 @@ const Home = () => {
             Siguiente
           </button>
         </div>
+        {vistaActual === "inicio" && (
+          <>
+            <h1 className="mb-4">Bienvenido {username}</h1>
+
+            <div className="mb-3 d-flex gap-3">
+              <button
+                className="btn"
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                onClick={handleRegistroIndividual}
+              >
+                Registro Individual
+              </button>
+              <button
+                className="btn"
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                onClick={handleButtonClick}
+              >
+                Registro por Lotes
+              </button>
+              <ExcelReader ref={excelReaderRef} />
+            </div>
+
+            {/* Modal para mostrar el formulario */}
+            {mostrarFormulario && (
+              <div
+                className="modal fade show"
+                style={{ display: "block" }}
+                aria-labelledby="exampleModalLabel"
+                aria-hidden="true"
+              >
+                <div
+                  className="modal-dialog"
+                  style={{ maxWidth: "600px", maxHeight: "500px" }}
+                >
+                  <div className="modal-content">
+                    <div className="modal-body">
+                      <FormularioRegistroActivos
+                        closeModal={handleCerrarModal}
+                        agregarActivo={agregarActivo}
+                        activoTabla={activoSeleccionado} // Pasamos el activo seleccionado (si existe)
+                        esEdicion={esEdicion} // Pasamos el estado del modo
+                        actualizarActivo={actualizarActivo}
+                        recargarTabla={fetchActivos} // Pasa la función para recargar la tabla
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tabla de activos */}
+            <TablaActivos
+              activos={activosPaginados}
+              onEdit={handleEditarActivo}
+            />
+
+            {/* Controles de paginación */}
+            <div
+              className="d-flex justify-content-between mt-4"
+              style={{ gap: "20px" }}
+            >
+              <button
+                className="btn"
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                onClick={handlePaginaAnterior}
+                disabled={paginaActual === 1}
+              >
+                Anterior
+              </button>
+              <button
+                className="btn"
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                onClick={handlePaginaSiguiente}
+                disabled={paginaActual === totalPaginas}
+              >
+                Siguiente
+              </button>
+            </div>
+          </>
+        )}
+        {vistaActual === "mantenimientos" && <MantenimientosPrincipal />}
       </div>
     </>
   );

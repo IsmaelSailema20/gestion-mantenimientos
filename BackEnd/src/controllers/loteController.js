@@ -106,9 +106,9 @@ module.exports.loteController = async (req, res) => {
             const query = `
         INSERT INTO Activos (
           numero_serie, proceso_compra, tipo, estado, 
-          id_ubicacion, id_proveedor, id_laboratorista, id_modelo
+          id_ubicacion, id_proveedor, id_laboratorista, id_modelo, especificaciones, observaciones
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
             connection.query(
                 query,
@@ -121,6 +121,8 @@ module.exports.loteController = async (req, res) => {
                     idProveedor,
                     idLaboratorista,
                     idModelo,
+                    activo.especificaciones,
+                    activo.observaciones,
                 ],
                 (err, results) => {
                     if (err) reject(err);

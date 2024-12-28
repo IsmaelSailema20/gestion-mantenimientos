@@ -3,7 +3,7 @@ function capitalizeFirstLetter(str) {
   if (!str) return ""; // Manejar cadenas vacías
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
-const TablaActivos = ({ activos }) => {
+const TablaActivos = ({ activos, onEdit }) => {
   return (
     <div className="table-responsive">
       <table
@@ -21,7 +21,7 @@ const TablaActivos = ({ activos }) => {
         >
           <tr>
             <th>Codigo</th>
-            <th>Nombre</th>
+            <th>Activo</th>
             <th>Tipo</th>
             <th>Ubicación</th>
             <th>Estado</th>
@@ -37,13 +37,15 @@ const TablaActivos = ({ activos }) => {
                 <td>{capitalizeFirstLetter(activo.tipo_activo)}</td>
                 <td>{activo.ubicacion}</td>
                 <td>{capitalizeFirstLetter(activo.estado)}</td>
-                <td className="text-center">
+                <td className="text-center" style={{ padding: 0 }}>
                   <button
-                    className="btn d-flex align-items-center"
+                    onClick={() => onEdit(activo)}
+                    className="d-flex align-items-center justify-content-center"
                     style={{
                       backgroundColor: "transparent",
                       border: "none",
                       padding: 0,
+                      width: "100%",
                     }}
                   >
                     <img
@@ -74,5 +76,6 @@ const TablaActivos = ({ activos }) => {
 };
 TablaActivos.propTypes = {
   activos: PropTypes.array.isRequired,
+  onEdit: PropTypes.func.isRequired,
 };
 export default TablaActivos;

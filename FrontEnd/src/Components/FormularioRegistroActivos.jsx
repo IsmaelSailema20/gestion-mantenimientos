@@ -4,7 +4,21 @@ import SuccessModal from "./SuccessModal";
 import ErrorModal from "./ErrorModal";
 import PropTypes from "prop-types";
 
-function FormularioActivo({ closeModal, agregarActivo }) {
+function FormularioActivo({
+  closeModal,
+  agregarActivo,
+  activoTabla,
+  esEdicion,
+  actualizarActivo,
+  recargarTabla,
+}) {
+  const [activos, setActivos] = useState([]); // Estado para los activos
+  const [selectedActivo, setSelectedActivo] = useState(""); // Estado para el activo seleccionado
+  const [marcas, setMarcas] = useState([]); // Estado para las marcas
+  const [modelos, setModelos] = useState([]); // Estado para los modelos
+  const [selectedMarca, setSelectedMarca] = useState(""); // Marca seleccionada
+  const [selectedModelo, setSelectedModelo] = useState(""); // Modelo seleccionado
+  const [errorKey, setErrorKey] = useState(0); // Estado para forzar la re-renderización del modal
   const [bloques, setBloques] = useState([]); // Estado para los bloques (edificios)
   const [laboratorios, setLaboratorios] = useState([]); // Estado para los laboratorios
   const [selectedBloque, setSelectedBloque] = useState(""); // Estado para el bloque seleccionado
@@ -20,8 +34,9 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     titulo: "",
     mensaje: "",
   });
+
   const [formData, setFormData] = useState({
-    nombreActivo: "",
+    activo: "",
     modelo: "",
     marca: "",
     tipoActivo: "",
@@ -36,7 +51,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     encargado: "",
   });
   const [errors, setErrors] = useState({
-    nombreActivo: false,
+    activo: false,
     modelo: false,
     marca: false,
     tipoActivo: false,
@@ -67,17 +82,22 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     if (!str) return ""; // Manejar cadenas vacías
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
+
   // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    setShowModalError(false);
     // Validar campos requeridos
     const newErrors = {};
     let fieldsAreEmpty = false;
     Object.keys(formData).forEach((key) => {
-      if (formData[key].trim() === "") {
+      const value = formData[key];
+      if (typeof value === "string" && value.trim() === "") {
         newErrors[key] = true; // Marcar campo como vacío
         fieldsAreEmpty = true; // Detectar si hay campos vacíos
+      } else if (value === null || value === undefined || value === "") {
+        newErrors[key] = true; // Considerar nulos o indefinidos como vacíos
+        fieldsAreEmpty = true;
       } else {
         newErrors[key] = false;
       }
@@ -100,69 +120,116 @@ function FormularioActivo({ closeModal, agregarActivo }) {
         mensaje: "Por favor, complete todos los campos requeridos.",
       });
       setShowModalError(true); // Mostrar el modal de error
+      setErrorKey((prevKey) => prevKey + 1);
       return; // No enviar el formulario
     }
-    setShowModalError(false);
+
     // Construir los datos que quieres enviar al backend
     const dataToSend = {
-      nombreActivo: formData.nombreActivo,
-      modelo: formData.modelo,
-      marca: formData.marca,
-      tipoActivo: formData.tipoActivo,
       numeroSerie: formData.numeroSerie,
       procesoCompra: formData.procesoCompra,
-      proveedor: selectedProveedor, // Usamos el valor del proveedor seleccionado
-      bloque: selectedBloque, // El bloque seleccionado
-      laboratorio: selectedLaboratorio, // El laboratorio seleccionado
       estado: formData.estado,
+      tipo: formData.tipoActivo,
       especificaciones: formData.especificaciones,
       observaciones: formData.observaciones,
-      encargado: selectedEncargado, // Usamos el valor del encargado seleccionado
+      id_proveedor: selectedProveedor,
+      id_laboratorio: selectedLaboratorio,
+      id_ubicacion: selectedBloque,
+      id_modelo: selectedModelo,
+      id_laboratorista: selectedEncargado,
     };
 
-    // Realizar la solicitud POST para guardar los datos en la base de datos
-    axios
-      .post("http://localhost:5000/registrarActivos", dataToSend)
-      .then((response) => {
-        console.log("Activo guardado:", response.data);
-
-        // Si la solicitud es exitosa, agregar el activo a la lista de activos en Home
-        agregarActivo(response.data); // Agregar el nuevo activo al estado de Home
-
-        // Si la solicitud es exitosa, muestra el modal de éxito
-        setModalData({
-          titulo: "¡Operación Exitosa!",
-          mensaje: "El activo se ha registrado correctamente.",
+    if (esEdicion) {
+      // Actualizar activo
+      axios
+        .put(
+          `http://localhost:5000/actualizarActivo/${activoTabla.id_activo}`,
+          dataToSend
+        )
+        .then((response) => {
+          console.log("Activo actualizado:", response.data);
+          actualizarActivo(response.data); // Actualiza la lista de activos
+          recargarTabla(); // Recarga la tabla de activos
+          setModalData({
+            titulo: "¡Operación Exitosa!",
+            mensaje: "El activo se ha Actualizado correctamente.",
+          });
+          setShowModal(true); // Mostrar el modal de éxito
+          setShowModalError(false); // Ocultar el modal de error
+          // Cerrar el formulario después de mostrar el mensaje
+          setTimeout(() => {
+            setShowModal(false); // Oculta el modal de éxito
+            closeModal(); // Cierra el formulario
+          }, 2000); // 2 segundos de espera
+        })
+        .catch((error) => {
+          if (error.response.status === 500) {
+            setModalDataError({
+              titulo: "Error al registrar",
+              mensaje:
+                "El identificador de activo ya existe. Inténtalo de nuevo.",
+            });
+          } else {
+            //console.error("Error al guardar el activo:", error);
+            // Si hay un error, muestra el modal de error
+            setModalDataError({
+              titulo: "Error al registrar",
+              mensaje: "Error al registrar el activo. Inténtalo de nuevo.",
+            });
+          }
+          setShowModalError(true); // Mostrar el modal de error
+          setErrorKey((prevKey) => prevKey + 1); // Ocultar el modal de éxito
         });
-        setShowModal(true); // Mostrar el modal de éxito
-        setShowModalError(false); // Ocultar el modal de error
+    } else {
+      // Realizar la solicitud POST para guardar los datos en la base de datos
+      axios
+        .post("http://localhost:5000/registrarActivos", dataToSend)
+        .then((response) => {
+          console.log("Activo guardado:", response.data);
 
-        setFormData({
-          nombreActivo: "",
-          modelo: "",
-          marca: "",
-          tipoActivo: "",
-          numeroSerie: "",
-          procesoCompra: "",
-          proveedor: "",
-          bloque: "",
-          laboratorio: "",
-          estado: "",
-          especificaciones: "",
-          observaciones: "",
-          encargado: "",
+          // Si la solicitud es exitosa, agregar el activo a la lista de activos en Home
+          agregarActivo(response.data); // Agregar el nuevo activo al estado de Home
+
+          // Si la solicitud es exitosa, muestra el modal de éxito
+          setModalData({
+            titulo: "¡Operación Exitosa!",
+            mensaje: "El activo se ha registrado correctamente.",
+          });
+          setShowModal(true); // Mostrar el modal de éxito
+          setShowModalError(false); // Ocultar el modal de error
+
+          setFormData({
+            numeroSerie: "",
+            procesoCompra: "",
+            estado: "",
+            especificaciones: "",
+            observaciones: "",
+            id_proveedor: "",
+            id_laboratorio: "",
+            id_ubicacion: "",
+            id_modelo: "",
+            id_laboratorista: "",
+          });
+        })
+        .catch((error) => {
+          if (error.response.status === 500) {
+            setModalDataError({
+              titulo: "Error al registrar",
+              mensaje:
+                "El identificador de activo ya existe. Inténtalo de nuevo.",
+            });
+          } else {
+            //console.error("Error al guardar el activo:", error);
+            // Si hay un error, muestra el modal de error
+            setModalDataError({
+              titulo: "Error al registrar",
+              mensaje: "Error al registrar el activo. Inténtalo de nuevo.",
+            });
+          }
+          setShowModalError(true); // Mostrar el modal de error
+          setErrorKey((prevKey) => prevKey + 1); // Ocultar el modal de éxito
         });
-      })
-      .catch((error) => {
-        console.error("Error al guardar el activo:", error);
-        // Si hay un error, muestra el modal de error
-        setModalDataError({
-          titulo: "Error al registrar",
-          mensaje: "Error al registrar el activo. Inténtalo de nuevo.",
-        });
-        setShowModalError(true); // Mostrar el modal de error
-        setShowModal(false);
-      });
+    }
   };
 
   const handleChangeEncargado = (e) => {
@@ -181,19 +248,101 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       axios.get("http://localhost:5000/laboratoristas"),
       axios.get("http://localhost:5000/proveedores"),
       axios.get("http://localhost:5000/edificios"),
+      axios.get("http://localhost:5000/tiposActivos"),
     ])
       .then(
-        ([laboratoristasResponse, proveedoresResponse, edificiosResponse]) => {
+        ([
+          laboratoristasResponse,
+          proveedoresResponse,
+          edificiosResponse,
+          tipoActivosResponse,
+        ]) => {
           // Asigna los datos de las respuestas a sus respectivos estados
           setEncargados(laboratoristasResponse.data);
           setProveedores(proveedoresResponse.data);
           setBloques(edificiosResponse.data);
+          setActivos(tipoActivosResponse.data);
+          console.log("Datos obtenidos:", tipoActivosResponse.data);
         }
       )
       .catch((error) => {
         console.error("Hubo un error al obtener los datos:", error);
       });
   }, []);
+
+  // Precarga los datos si se recibe un activo
+  useEffect(() => {
+    if (activoTabla) {
+      console.log("Activos Tabla", activoTabla);
+
+      setFormData({
+        numeroSerie: activoTabla.numero_serie || "",
+        procesoCompra: activoTabla.proceso_compra || "",
+        estado: activoTabla.estado || "",
+        especificaciones: activoTabla.especificaciones || "",
+        observaciones: activoTabla.observaciones || "",
+        id_tipo: activoTabla.id_tipo || "",
+        id_proveedor: activoTabla.id_proveedor || "",
+        id_laboratorio: activoTabla.id_laboratorio || "",
+        id_ubicacion: activoTabla.id_ubicacion || "",
+        id_modelo: activoTabla.id_modelo || "",
+        id_laboratorista: activoTabla.id_laboratorista || "",
+        tipoActivo: capitalizeFirstLetter(activoTabla.tipo_activo) || "",
+      });
+      // Actualiza los estados específicos para los combobox
+      setSelectedActivo(activoTabla.id_tipo || "");
+      setSelectedProveedor(activoTabla.id_proveedor || "");
+      setSelectedLaboratorio(activoTabla.id_laboratorio || "");
+      setSelectedBloque(activoTabla.id_ubicacion || "");
+      setSelectedModelo(activoTabla.id_modelo || "");
+      setSelectedMarca(activoTabla.id_marca || "");
+      setSelectedEncargado(activoTabla.id_laboratorista || "");
+
+      // Cargar opciones dinámicas para combobox anidados
+      if (activoTabla.id_ubicacion) {
+        fetchLaboratorios(activoTabla.id_ubicacion); // Cargar laboratorios asociados al bloque
+      }
+      if (activoTabla.id_tipo) {
+        fetchMarcas(activoTabla.id_tipo); // Cargar marcas asociadas al tipo activo
+      }
+      if (activoTabla.id_marca) {
+        fetchModelos(activoTabla.id_marca); // Cargar modelos asociados a la marca
+      }
+    }
+  }, [activoTabla]);
+
+  const fetchLaboratorios = (idBloque) => {
+    axios
+      .get(`http://localhost:5000/laboratorios/${idBloque}`)
+      .then((response) => {
+        setLaboratorios(response.data); // Actualizar lista de laboratorios
+      })
+      .catch((error) => {
+        console.error("Error al obtener laboratorios:", error);
+      });
+  };
+
+  const fetchMarcas = (idTipo) => {
+    axios
+      .get(`http://localhost:5000/marcas/${idTipo}`)
+      .then((response) => {
+        setMarcas(response.data); // Actualizar lista de marcas
+      })
+      .catch((error) => {
+        console.error("Error al obtener marcas:", error);
+      });
+  };
+
+  const fetchModelos = (idMarca) => {
+    axios
+      .get(`http://localhost:5000/modelos/${idMarca}`)
+      .then((response) => {
+        setModelos(response.data); // Actualizar lista de modelos
+      })
+      .catch((error) => {
+        console.error("Error al obtener modelos:", error);
+      });
+  };
 
   const getInputClass = (field) => {
     return errors[field] ? "form-control is-invalid" : "form-control";
@@ -207,14 +356,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
 
     // Obtener los laboratorios asociados a ese bloque
     if (idEdificio) {
-      axios
-        .get(`http://localhost:5000/laboratorios/${idEdificio}`) // Endpoint para obtener laboratorios por bloque
-        .then((response) => {
-          setLaboratorios(response.data); // Guardar los laboratorios en el estado
-        })
-        .catch((error) => {
-          console.error("Error al obtener laboratorios:", error);
-        });
+      fetchLaboratorios(idEdificio);
     } else {
       setLaboratorios([]); // Si no hay bloque seleccionado, limpiar los laboratorios
     }
@@ -225,10 +367,53 @@ function FormularioActivo({ closeModal, agregarActivo }) {
     formData.laboratorio = e.target.value; // Establecer el laboratorio seleccionado
   };
 
+  // Manejar el cambio en el activo seleccionado
+  const handleActivoChange = (e) => {
+    const activoId = e.target.value;
+    setSelectedActivo(activoId);
+    formData.activo = activoId;
+
+    // Llamada a la API para obtener marcas relacionadas con el activo
+    axios
+      .get(`http://localhost:5000/marcas/${activoId}`) // Endpoint para obtener marcas por activo
+      .then((response) => {
+        setMarcas(response.data); // Actualizar marcas en el estado
+        setModelos([]); // Limpiar modelos al cambiar el activo
+      })
+      .catch((error) => {
+        console.error("Error al obtener marcas:", error);
+      });
+  };
+
+  // Manejar el cambio en la marca seleccionada
+  const handleMarcaChange = (e) => {
+    const marcaId = e.target.value;
+    setSelectedMarca(marcaId);
+    formData.marca = marcaId;
+
+    // Llamada a la API para obtener modelos relacionados con la marca
+    axios
+      .get(`http://localhost:5000/modelos/${marcaId}`) // Endpoint para obtener modelos por marca
+      .then((response) => {
+        setModelos(response.data); // Actualizar modelos en el estado
+      })
+      .catch((error) => {
+        console.error("Error al obtener modelos:", error);
+      });
+  };
+
+  // Manejar el cambio en el modelo seleccionado
+  const handleModeloChange = (e) => {
+    const modeloId = e.target.value;
+    setSelectedModelo(modeloId);
+    formData.modelo = modeloId;
+  };
   return (
     <>
       <div className="d-flex justify-content-between text-center align-items-center mb-4">
-        <h4>Registrar Nuevo Activo</h4>
+        <h5 className="modal-title">
+          {esEdicion ? "Editar Activo" : "Registrar Nuevo Activo"}
+        </h5>
         <span
           className="close"
           style={{
@@ -253,44 +438,61 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       >
         <div className="d-flex">
           <label
-            htmlFor="nombreActivo"
-            style={{ width: "300px", fontWeight: "bold" }}
+            htmlFor="activo"
+            style={{
+              fontWeight: "bold",
+              marginBottom: "10px",
+              marginTop: "10px",
+              marginRight: "20px",
+            }}
           >
-            Nombre del activo
+            Activo
           </label>
-          <input
-            maxLength="100"
-            type="text"
-            className={getInputClass("nombreActivo")}
-            id="nombreActivo"
-            value={capitalizeFirstLetter(formData.nombreActivo)}
-            onChange={handleChange}
-            placeholder="Nombre del activo"
-          />
+          <select
+            className={getInputClass("activo")}
+            value={selectedActivo}
+            onChange={handleActivoChange}
+            id="activo"
+          >
+            <option value="">Seleccione un activo</option>
+            {activos.map((activo) => (
+              <option key={activo.id_tipo} value={activo.id_tipo}>
+                {activo.nombre}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* COMBO BOX TIPO ACTIVO */}
+
         <div className="row">
           {/* Columna 1 */}
           <div className="col-md-6">
             <div className="form-group">
               <label
-                htmlFor="modelo"
+                htmlFor="marca"
                 style={{
                   fontWeight: "bold",
-                  marginBottom: "10px",
+                  marginRight: "20px",
                   marginTop: "10px",
+                  marginBottom: "10px",
                 }}
               >
-                Modelo
+                Marca
               </label>
-              <input
-                maxLength="100"
-                type="text"
-                className={getInputClass("modelo")}
-                id="modelo"
-                value={formData.modelo}
-                onChange={handleChange}
-                placeholder="Modelo"
-              />
+              <select
+                className={getInputClass("marca")}
+                value={selectedMarca}
+                onChange={handleMarcaChange}
+                id="marca"
+              >
+                <option value="">Seleccione una marca</option>
+                {marcas.map((marca) => (
+                  <option key={marca.id_marca} value={marca.id_marca}>
+                    {marca.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
@@ -374,25 +576,31 @@ function FormularioActivo({ closeModal, agregarActivo }) {
           <div className="col-md-6">
             <div className="form-group">
               <label
-                htmlFor="marca"
+                htmlFor="modelo"
                 style={{
                   fontWeight: "bold",
-                  marginBottom: "10px",
+                  marginRight: "20px",
                   marginTop: "10px",
+                  marginBottom: "10px",
                 }}
               >
-                Marca
+                Modelo
               </label>
-              <input
-                maxLength="100"
-                type="text"
-                className={getInputClass("marca")}
-                id="marca"
-                value={formData.marca}
-                onChange={handleChange}
-                placeholder="Marca"
-              />
+              <select
+                className={getInputClass("modelo")}
+                value={selectedModelo}
+                onChange={handleModeloChange}
+                id="modelo"
+              >
+                <option value="">Seleccione un modelo</option>
+                {modelos.map((modelo) => (
+                  <option key={modelo.id_modelo} value={modelo.id_modelo}>
+                    {modelo.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
+
             <div className="form-group">
               <label
                 htmlFor="numeroSerie"
@@ -518,13 +726,13 @@ function FormularioActivo({ closeModal, agregarActivo }) {
               <input
                 type="radio"
                 className="form-check-input"
-                id="nuevo"
+                id="proceso_instalacion"
                 name="proceso_instalacion"
-                value="En Proceso de instalacion"
+                value="En proceso de instalación"
                 onChange={handleEstadoChange}
-                checked={formData.estado === "En Proceso de instalacion"}
+                checked={formData.estado === "En proceso de instalación"}
               />
-              <label className="form-check-label" htmlFor="Nuevo">
+              <label className="form-check-label" htmlFor="proceso_instalacion">
                 En proceso de instalación
               </label>
             </div>
@@ -622,6 +830,7 @@ function FormularioActivo({ closeModal, agregarActivo }) {
       )}
       {showModalError && (
         <ErrorModal
+          key={errorKey}
           titulo={modalDataError.titulo}
           mensaje={modalDataError.mensaje}
         />
@@ -631,8 +840,28 @@ function FormularioActivo({ closeModal, agregarActivo }) {
 }
 
 FormularioActivo.propTypes = {
+  actualizarActivo: PropTypes.func.isRequired,
   closeModal: PropTypes.func.isRequired,
   agregarActivo: PropTypes.func.isRequired, // La propiedad titulo debe ser una funcion y es requerida
+  recargarTabla: PropTypes.func.isRequired,
+  activoTabla: PropTypes.shape({
+    // El objeto activo, opcional
+    id_activo: PropTypes.number,
+    numero_serie: PropTypes.string,
+    proceso_compra: PropTypes.string,
+    estado: PropTypes.string,
+    especificaciones: PropTypes.string,
+    observaciones: PropTypes.string,
+    id_proveedor: PropTypes.number,
+    id_laboratorio: PropTypes.number,
+    id_ubicacion: PropTypes.number,
+    id_modelo: PropTypes.number,
+    id_marca: PropTypes.number,
+    id_laboratorista: PropTypes.string,
+    tipo_activo: PropTypes.string,
+    id_tipo: PropTypes.number,
+  }),
+  esEdicion: PropTypes.bool,
 };
 
 export default FormularioActivo;
