@@ -9,13 +9,14 @@ const {getLaboratoriosPorBloque} = require('../controllers/laboratoriosPorBloque
 const {registrarActivos} = require('../controllers/registrarActivosController.js');
 const { getEdificios } = require('../controllers/edificiosController.js'); 
 const { loteController } = require('../controllers/loteController.js'); 
+const {getActivosDisponibles} = require('../controllers/activosController');
+const {crearMantenimiento} = require('../controllers/crearMantenimiento');
+const {empresas_mantenimientos} = require('../controllers/empresas_mantenimientos.js');
 const { getTipoActivos } = require('../controllers/tipoActivoController.js');
 const { getMarcasPorActivo } = require('../controllers/marcasController.js');
 const { getModelosPorMarca } = require('../controllers/modelosController.js');
 const { actualizarActivos } = require('../controllers/editarActivosController.js');
 const { getMantenimientos } = require("../controllers/mantenimientoControllers");
-
-  
 router.get('/activos', getActivos);
 router.get('/ping',ping);
 router.post('/login',login);
@@ -24,6 +25,9 @@ router.get('/proveedores',getProveedores);
 router.get('/edificios', getEdificios);
 router.get('/laboratorios/:idEdificio', getLaboratoriosPorBloque);
 router.post('/registrarActivos',registrarActivos);
+router.get('/activos-disponibles', getActivosDisponibles);
+router.post('/crear-mantenimiento', crearMantenimiento);
+router.get('/empresas_mantenimientos',empresas_mantenimientos);
 router.get('/tiposActivos',getTipoActivos);
 router.get('/marcas/:idActivo', getMarcasPorActivo);
 router.get('/modelos/:idMarca', getModelosPorMarca);

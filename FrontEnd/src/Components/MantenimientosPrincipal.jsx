@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import FormularioMantenimiento from "../Components/FormularioMantenimiento";
 
 const MantenimientosPrincipal = ({ onEdit }) => {
   const [mantenimientos, setMantenimientos] = useState([]);
@@ -16,9 +17,27 @@ const MantenimientosPrincipal = ({ onEdit }) => {
     cantidad: 1,
   });
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [mostrarRegFormulario, setMostrarRegFormulario] = useState(false);
+  const handleMostrarRegFormulario = () => {
+    setMostrarRegFormulario(true);
+  };
+  useEffect(() => {
+    cargarMantenimientos();
+  }, []);
+  const cargarMantenimientos = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/mantenimientos");
+      setMantenimientos(response.data);
+    } catch (error) {
+      console.error("Error al cargar los mantenimientos", error);
+    }
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Número de elementos por página
 
+  const cerrarFormulario = () => {
+    setMostrarRegFormulario(false);
+  };
   const fetchMantenimientos = async () => {
     try {
       const response = await axios.get("http://localhost:5000/mantenimientos", { params: filters });
@@ -56,6 +75,12 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       (filters.activos === "" || mantenimiento.activos === parseInt(filters.activos, 10))
     );
   });
+  const agregarMantenimiento = (nuevoMantenimiento) => {
+    setMantenimientos((prevMantenimientos) => [
+      ...prevMantenimientos,
+      nuevoMantenimiento,
+    ]);
+  };
 
   // Calcular mantenimientos para la página actual
   const totalPages = Math.ceil(filteredMantenimientos.length / itemsPerPage);
@@ -86,6 +111,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
             color: "white",
             fontWeight: "bold",
           }}
+          onClick={handleMostrarRegFormulario}
         >
           Crear Mantenimiento
         </button>
@@ -264,6 +290,28 @@ const MantenimientosPrincipal = ({ onEdit }) => {
           </div>
         </div>
       </div>
+      {mostrarRegFormulario && (
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+          >
+            <div className="modal-content">
+              <div className="modal-body">
+                <FormularioMantenimiento
+                  closeModal={cerrarFormulario}
+                  recargarTabla={cargarMantenimientos}
+                  />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="table-responsive">
