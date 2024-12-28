@@ -9,6 +9,9 @@ const {getLaboratoriosPorBloque} = require('../controllers/laboratoriosPorBloque
 const {registrarActivos} = require('../controllers/registrarActivosController.js');
 const { getEdificios } = require('../controllers/edificiosController.js'); 
 const { loteController } = require('../controllers/loteController.js'); 
+const {getActivosDisponibles} = require('../controllers/activosController');
+const {crearMantenimiento} = require('../controllers/crearMantenimiento');
+const {empresas_mantenimientos} = require('../controllers/empresas_mantenimientos.js');
 
 router.get('/activos', getActivos);
 router.get('/ping',ping);
@@ -18,6 +21,8 @@ router.get('/proveedores',getProveedores);
 router.get('/edificios', getEdificios);
 router.get('/laboratorios/:idEdificio', getLaboratoriosPorBloque);
 router.post('/registrarActivos',registrarActivos);
-
+router.get('/activos-disponibles', getActivosDisponibles);
+router.post('/crear-mantenimiento', crearMantenimiento);
+router.get('/empresas_mantenimientos',empresas_mantenimientos);
 router.post('/registrarLoteActivos',loteController);
 module.exports =router; 
