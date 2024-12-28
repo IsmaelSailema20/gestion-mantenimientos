@@ -5,8 +5,6 @@ import axios from "axios";
 import { parseJwt } from "../MAIN/Main";
 import ExcelReader from "../Components/ExcelReader";
 import { useRef } from "react";
-import FormularioMantenimiento from "../Components/FormularioMantenimiento";
-import { useRef } from "react";
 import MantenimientosPrincipal from "../Components/MantenimientosPrincipal";
 
 const Home = () => {
@@ -18,17 +16,6 @@ const Home = () => {
   const elementosPorPagina = 7; // Número de elementos por página
   const [username, setUsername] = useState("");
   const [rol, setRol] = useState("");
-  const [mostrarRegFormulario, setMostrarRegFormulario] = useState(false);
-
-  useEffect(() => {
-    const fetchActivos = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/activos");
-        setActivos(response.data);
-      } catch (error) {
-        console.error("Error al obtener los datos:", error);
-      }
-    };
   const [activoSeleccionado, setActivoSeleccionado] = useState(null); // Activo seleccionado para editar
   const [esEdicion, setEsEdicion] = useState(false); // Bandera para el modo edición o creación
 
@@ -65,18 +52,6 @@ const Home = () => {
     window.location.reload();
   };
 
-  /*
-  const handleActualizar = (activo) => {
-    console.log("Actualizar activo:", activo);
-    // Agrega tu lógica para actualizar el activo aquí
-  };*/
-  const handleMostrarRegFormulario = () => {
-    setMostrarRegFormulario(true);
-  };
-
-  const cerrarFormulario = () => {
-    setMostrarRegFormulario(false);
-  };
   const indiceInicial = (paginaActual - 1) * elementosPorPagina;
   const indiceFinal = indiceInicial + elementosPorPagina;
   const activosPaginados = activos.slice(indiceInicial, indiceFinal);
@@ -163,17 +138,16 @@ const Home = () => {
             }
             className="btn"
             style={{
-              backgroundColor: rol === "admin" ? "white" : "gray",
-              color: rol === "admin" ? "black" : "white",
+              backgroundColor: rol === "admin" ? "white" : "gray", // Color gris para laboratorista
+              color: rol === "admin" ? "black" : "white", // Texto gris si es laboratorista
               cursor: rol === "admin" ? "pointer" : "not-allowed",
               borderRadius: "35px",
               fontSize: "20px",
               padding: "10px 20px",
               fontWeight: "bold",
-              whiteSpace: "nowrap",
+              whiteSpace: "nowrap", // Cursor para indicar deshabilitado
             }}
-            disabled={rol !== "admin"}
-            onClick={handleMostrarRegFormulario}
+            disabled={rol !== "admin"} // Desactivar el botón si no es admin
           >
             {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
           </button>
@@ -195,90 +169,6 @@ const Home = () => {
 
       {/* Contenido principal */}
       <div className="container mt-4">
-        <h1 className="mb-4">Bienvenido {username}</h1>
-        <div className="mb-3 d-flex gap-3">
-          <button
-            className="btn"
-            style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
-            onClick={handleRegistroIndividual}
-          >
-            Registro Individual
-          </button>
-          <button
-            className="btn"
-            style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
-            onClick={handleButtonClick}
-          >
-            Registro por Lotes
-          </button>
-          <ExcelReader ref={excelReaderRef} />
-        </div>
-        {mostrarRegFormulario && (
-          <div
-            className="modal fade show"
-            style={{ display: "block" }}
-            aria-labelledby="exampleModalLabel"
-            aria-hidden="true"
-          >
-            <div
-              className="modal-dialog"
-              style={{ maxWidth: "1000px", maxHeight: "1000px" }}
-            >
-              <div className="modal-content">
-                <div className="modal-body">
-                  <FormularioMantenimiento closeModal={cerrarFormulario} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Modal para mostrar el formulario */}
-        {mostrarFormulario && (
-          <div
-            className="modal fade show"
-            style={{ display: "block" }}
-            aria-labelledby="exampleModalLabel"
-            aria-hidden="true"
-          >
-            <div
-              className="modal-dialog"
-              style={{ maxWidth: "600px", maxHeight: "500px" }}
-            >
-              <div className="modal-content">
-                <div className="modal-body">
-                  <FormularioRegistroActivos
-                    closeModal={handleCerrarModal}
-                    agregarActivo={agregarActivo} // Pasamos la función para agregar el activo
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Tabla de activos */}
-        <TablaActivos activos={activosPaginados} />
-        {/* Controles de paginación */}
-        <div
-          className="d-flex justify-content-between mt-4"
-          style={{ gap: "20px" }}
-        >
-          <button
-            className="btn"
-            style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
-            onClick={handlePaginaAnterior}
-            disabled={paginaActual === 1}
-          >
-            Anterior
-          </button>
-          <button
-            className="btn"
-            style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
-            onClick={handlePaginaSiguiente}
-            disabled={paginaActual === totalPaginas}
-          >
-            Siguiente
-          </button>
-        </div>
         {vistaActual === "inicio" && (
           <>
             <h1 className="mb-4">Bienvenido {username}</h1>

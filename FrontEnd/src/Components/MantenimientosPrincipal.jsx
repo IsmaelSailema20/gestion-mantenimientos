@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import FormularioMantenimiento from "../Components/FormularioMantenimiento";
 
 const MantenimientosPrincipal = ({ onEdit }) => {
   const [mantenimientos, setMantenimientos] = useState([]);
@@ -15,7 +16,25 @@ const MantenimientosPrincipal = ({ onEdit }) => {
     fin: "",
   });
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [mostrarRegFormulario, setMostrarRegFormulario] = useState(false);
+  const handleMostrarRegFormulario = () => {
+    setMostrarRegFormulario(true);
+  };
+  useEffect(() => {
+    cargarMantenimientos();
+  }, []);
+  const cargarMantenimientos = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/mantenimientos");
+      setMantenimientos(response.data);
+    } catch (error) {
+      console.error("Error al cargar los mantenimientos", error);
+    }
+  };
 
+  const cerrarFormulario = () => {
+    setMostrarRegFormulario(false);
+  };
   const fetchMantenimientos = async () => {
     try {
       const response = await axios.get("http://localhost:5000/mantenimientos");
@@ -44,14 +63,21 @@ const MantenimientosPrincipal = ({ onEdit }) => {
     return (
       (filters.numero === "" ||
         mantenimiento.numero.toString().includes(filters.numero)) &&
-      (filters.estado === "" || mantenimiento.estado.includes(filters.estado)) &&
-      (filters.activos === "" || mantenimiento.activos.toString().includes(filters.activos)) &&
+      (filters.estado === "" ||
+        mantenimiento.estado.includes(filters.estado)) &&
+      (filters.activos === "" ||
+        mantenimiento.activos.toString().includes(filters.activos)) &&
       (filters.tipo === "" || mantenimiento.tipo.includes(filters.tipo)) &&
       (filters.inicio === "" || mantenimiento.inicio >= filters.inicio) &&
       (filters.fin === "" || mantenimiento.fin <= filters.fin)
     );
   });
-
+  const agregarMantenimiento = (nuevoMantenimiento) => {
+    setMantenimientos((prevMantenimientos) => [
+      ...prevMantenimientos,
+      nuevoMantenimiento,
+    ]);
+  };
   return (
     <div className="container">
       {/* Controles superiores */}
@@ -65,6 +91,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
             color: "white",
             fontWeight: "bold",
           }}
+          onClick={handleMostrarRegFormulario}
         >
           Crear Mantenimiento
         </button>
@@ -74,7 +101,10 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       <div className="d-flex flex-wrap gap-4 mb-3">
         <div className="d-flex align-items-center gap-3">
           {/* Buscador */}
-          <div className="d-flex align-items-center" style={{ position: "relative", width: "250px" }}>
+          <div
+            className="d-flex align-items-center"
+            style={{ position: "relative", width: "250px" }}
+          >
             <input
               type="text"
               placeholder="Search"
@@ -133,7 +163,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                   zIndex: 1000,
                 }}
               >
-                <div className="d-flex flex-column gap-2" >
+                <div className="d-flex flex-column gap-2">
                   <input
                     type="text"
                     name="numero"
@@ -230,6 +260,28 @@ const MantenimientosPrincipal = ({ onEdit }) => {
           </div>
         </div>
       </div>
+      {mostrarRegFormulario && (
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+        >
+          <div
+            className="modal-dialog"
+            style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+          >
+            <div className="modal-content">
+              <div className="modal-body">
+                <FormularioMantenimiento
+                  closeModal={cerrarFormulario}
+                  recargarTabla={cargarMantenimientos}
+                  />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="table-responsive">

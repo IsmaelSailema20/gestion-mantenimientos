@@ -6,7 +6,7 @@ import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 
-function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
+function FormularioMantenimiento({ closeModal, recargarTabla }) {
   const [activos, setActivos] = useState([]);
   const [selectedActivos, setSelectedActivos] = useState([]);
   const [tipo, setTipo] = useState("");
@@ -78,14 +78,12 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
   };
 
   const handleSubmit = async () => {
-    console.log("llega subm,it");
     if (
       !tipo ||
       !descripcion ||
       !identificador ||
       selectedActivos.length === 0
     ) {
-      console.log("ww");
       setModalDataError({
         titulo: "Error de Validación",
         mensaje:
@@ -93,7 +91,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
       });
       setShowModalError(true);
       setTimeout(() => {
-        resetModalStates(); //para q el modal se muestre nuevamente
+        resetModalStates(); //para que el modal se muestre nuevamente
       }, 3000);
       return;
     }
@@ -110,14 +108,18 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
           activos: selectedActivos,
         }
       );
-      console.log(response);
-      console.log(response.data.message);
-      console.log(response.data.message === "Mantenimiento creado con éxito");
+
       if (response.data.message === "Mantenimiento creado con éxito") {
         setModalData({
           titulo: "Mantenimiento Creado",
           mensaje: "El mantenimiento se creó con éxito.",
         });
+
+        // Recargar la tabla al crear el mantenimiento
+        if (recargarTabla) {
+          recargarTabla();
+        }
+
         setShowModal(true);
 
         setTimeout(() => {
@@ -132,7 +134,6 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
         setShowModalError(true);
       }
     } catch (err) {
-      console.log(err);
       setModalDataError({
         titulo: "Error al crear mantenimiento",
         mensaje: err.response?.data?.error || "Ocurrió un error inesperado.",
@@ -163,9 +164,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
         <input
           type="checkbox"
           onChange={(e) => selectAllActivos(e.target.checked)}
-          checked={
-            selectedActivos.length === activos.length && activos.length > 0
-          }
+          checked={selectedActivos.length === activos.length && activos.length > 0}
         />
         Seleccionar Todos
         <div
@@ -220,13 +219,8 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
                   <td>{activo.tipo}</td>
                   <td>{activo.estado}</td>
                   <td>{activo.ubicacion}</td>
-
                   <td>
-                    {
-                      new Date(activo.fecha_registro)
-                        .toISOString()
-                        .split("T")[0]
-                    }
+                    {new Date(activo.fecha_registro).toISOString().split("T")[0]}
                   </td>
                 </tr>
               ))}
@@ -243,8 +237,6 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
           gap: "10px",
         }}
       >
-        {/*<h5 style={{ margin: 0 }}></h5>  */}
-
         <TextField
           select
           value={tipoEncargado}
@@ -253,7 +245,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
           style={{ width: "200px" }}
           SelectProps={{ native: true }}
         >
-          <option value="">Seleccionar</option>
+          <option value="">Entidad  Encargada</option>
           <option value="laboratorista">Laboratorista</option>
           <option value="empresa">Empresa</option>
         </TextField>
@@ -267,7 +259,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
             style={{ width: "250px" }}
             SelectProps={{ native: true }}
           >
-            <option value="">Seleccionar</option>
+            <option value="">Encargado</option>
             {encargados.map((encargado) => (
               <option
                 key={encargado.id}
@@ -289,7 +281,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
           style={{ width: "200px" }}
           SelectProps={{ native: true }}
         >
-          <option value="">Seleccionar Tipo</option>
+          <option value="">Tipo Mantenimiento</option>
           <option value="preventivo">Preventivo</option>
           <option value="correctivo">Correctivo</option>
         </TextField>
@@ -306,7 +298,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
 
         <button
           onClick={handleSubmit}
-          className="btn "
+          className="btn"
           style={{
             backgroundColor: "rgb(163, 33, 38)",
             color: "white",
@@ -337,7 +329,7 @@ function FormularioMantenimiento({ closeModal, agregarMantenimiento }) {
 
 FormularioMantenimiento.propTypes = {
   closeModal: PropTypes.func.isRequired,
-  agregarMantenimiento: PropTypes.func,
+  recargarTabla: PropTypes.func.isRequired,
 };
 
 export default FormularioMantenimiento;
