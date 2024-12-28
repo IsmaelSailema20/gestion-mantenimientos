@@ -2,10 +2,10 @@ const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
    host: 'localhost',
-   port: 3306,
+   port: 3310,
    user: 'root',
-   password: 'root',
-   database: 'gestionActivos'
+   password: '1804893517',
+   database: 'versionfinalcondatos'
 });
 
 connection.connect((err) => {

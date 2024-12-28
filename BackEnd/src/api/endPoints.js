@@ -13,6 +13,9 @@ const { getTipoActivos } = require('../controllers/tipoActivoController.js');
 const { getMarcasPorActivo } = require('../controllers/marcasController.js');
 const { getModelosPorMarca } = require('../controllers/modelosController.js');
 const { actualizarActivos } = require('../controllers/editarActivosController.js');
+const { getMantenimientos } = require("../controllers/mantenimientoControllers");
+
+  
 router.get('/activos', getActivos);
 router.get('/ping',ping);
 router.post('/login',login);
@@ -26,4 +29,5 @@ router.get('/marcas/:idActivo', getMarcasPorActivo);
 router.get('/modelos/:idMarca', getModelosPorMarca);
 router.post('/registrarLoteActivos',loteController);
 router.put('/actualizarActivo/:id_activo', actualizarActivos);
+router.get('/mantenimientos', getMantenimientos);  
 module.exports =router; 
