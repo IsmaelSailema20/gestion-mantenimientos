@@ -1,4 +1,4 @@
-import React, {
+import {
   forwardRef,
   useImperativeHandle,
   useRef,
@@ -22,7 +22,7 @@ const ExcelReader = forwardRef((_, ref) => {
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-
+  const [modelosInfo, setModelosInfo] = useState({});
   const requiredFields = {
     Marca: "marca",
     Modelo: "modelo",
@@ -36,6 +36,7 @@ const ExcelReader = forwardRef((_, ref) => {
     Encargado: "encargado",
     Especificaciones: "especificaciones",
     Observaciones: "observaciones",
+    Componentes: "componentes",
   };
 
   useImperativeHandle(ref, () => ({
@@ -43,7 +44,24 @@ const ExcelReader = forwardRef((_, ref) => {
       fileInputRef.current.click();
     },
   }));
+  useEffect(() => {
+    const fetchModelosInfo = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/modelos-info");
+        const modeloTipoMap = {};
+        response.data.forEach((modelo) => {
+          modeloTipoMap[modelo.modelo.trim().toLowerCase()] = modelo.tipo
+            .trim()
+            .toLowerCase();
+        });
+        setModelosInfo(modeloTipoMap);
+      } catch (error) {
+        console.error("Error al obtener la información de los modelos:", error);
+      }
+    };
 
+    fetchModelosInfo();
+  }, []);
   useEffect(() => {
     if (showSuccessModal || showErrorModal) {
       const timer = setTimeout(() => {
@@ -64,7 +82,8 @@ const ExcelReader = forwardRef((_, ref) => {
       const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      // Asegurar que las columnas vacías también estén presentes
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
       const columns = Object.keys(jsonData[0] || {});
       const missingFields = Object.keys(requiredFields).filter(
@@ -101,8 +120,36 @@ const ExcelReader = forwardRef((_, ref) => {
 
     reader.readAsBinaryString(file);
   };
+  const validateData = (data) => {
+    const errors = [];
+    data.forEach((row, index) => {
+      const modelo = row.modelo ? row.modelo.trim().toLowerCase() : null;
+      const tipo = modelosInfo[modelo]; // Busca el tipo basado en el modelo
 
+      if (
+        tipo === "cpu" && // Valida si el tipo es "cpu"
+        (!row.componentes || row.componentes.trim() === "")
+      ) {
+        errors.push(
+          `Error en fila ${
+            index + 1
+          }: El campo 'Componentes' es obligatorio para activos de tipo CPU.`
+        );
+      }
+    });
+    return errors;
+  };
   const sendDataToServer = (dataToSend) => {
+    const validationErrors = validateData(dataToSend);
+    if (validationErrors.length > 0) {
+      setErrorModalData({
+        titulo: "Errores de Validación",
+        mensaje: validationErrors.join("\n"),
+      });
+      setShowErrorModal(true);
+      return;
+    }
+
     axios
       .post("http://localhost:5000/registrarLoteActivos", dataToSend)
       .then((response) => {
@@ -133,7 +180,7 @@ const ExcelReader = forwardRef((_, ref) => {
           setShowErrorModal(true);
         }
       })
-      .catch((error) => {
+      .catch(() => {
         setErrorModalData({
           titulo: "Error de Servidor",
           mensaje: "Hubo un error al intentar registrar los activos.",
@@ -166,5 +213,7 @@ const ExcelReader = forwardRef((_, ref) => {
     </>
   );
 });
+
+ExcelReader.displayName = "ExcelReader";
 
 export default ExcelReader;

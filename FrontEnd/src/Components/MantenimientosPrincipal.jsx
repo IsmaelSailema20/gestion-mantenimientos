@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import FormularioMantenimiento from "../Components/FormularioMantenimiento";
@@ -40,10 +40,14 @@ const MantenimientosPrincipal = ({ onEdit }) => {
   };
   const fetchMantenimientos = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/mantenimientos", { params: filters });
+      const response = await axios.get("http://localhost:5000/mantenimientos", {
+        params: filters,
+      });
       setMantenimientos(response.data);
       setIsLoading(false);
     } catch (error) {
+      console.log(error);
+
       setError("Error al obtener los datos del servidor");
       setIsLoading(false);
     }
@@ -66,13 +70,16 @@ const MantenimientosPrincipal = ({ onEdit }) => {
   // Filtrar mantenimientos
   const filteredMantenimientos = mantenimientos.filter((mantenimiento) => {
     return (
-      (filters.numero === "" || mantenimiento.numero.toString().includes(filters.numero)) &&
-      (filters.estado === "" || mantenimiento.estado.includes(filters.estado)) &&
+      (filters.numero === "" ||
+        mantenimiento.numero.toString().includes(filters.numero)) &&
+      (filters.estado === "" ||
+        mantenimiento.estado.includes(filters.estado)) &&
       (filters.tipo === "" || mantenimiento.tipo.includes(filters.tipo)) &&
       (filters.inicio === "" || mantenimiento.inicio >= filters.inicio) &&
       (filters.fin === "" || mantenimiento.fin <= filters.fin) &&
       // Filtrar activos numéricamente
-      (filters.activos === "" || mantenimiento.activos === parseInt(filters.activos, 10))
+      (filters.activos === "" ||
+        mantenimiento.activos === parseInt(filters.activos, 10))
     );
   });
   const agregarMantenimiento = (nuevoMantenimiento) => {
@@ -120,7 +127,10 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       {/* Filtros y búsqueda */}
       <div className="d-flex flex-wrap gap-4 mb-3">
         <div className="d-flex align-items-center gap-3">
-          <div className="d-flex align-items-center" style={{ position: "relative", width: "250px" }}>
+          <div
+            className="d-flex align-items-center"
+            style={{ position: "relative", width: "250px" }}
+          >
             <input
               type="text"
               placeholder="Search"
@@ -224,7 +234,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                     style={{
                       borderRadius: "10px",
                       padding: "10px",
-                      border: "1px solid black", 
+                      border: "1px solid black",
                       width: "300px",
                     }}
                   />
@@ -233,27 +243,29 @@ const MantenimientosPrincipal = ({ onEdit }) => {
             )}
           </div>
           <button
-      onClick={() => setFilters({
-        numero: "",
-        estado: "",
-        activos: "",
-        tipo: "",
-        inicio: "",
-        fin: "",
-        cantidad: 1,
-      })}
-      style={{
-        backgroundColor: "#a32126",
-        border: "none",
-        padding: "10px 20px",
-        borderRadius: "25px",
-        cursor: "pointer",
-        fontWeight: "bold",
-        color: "white"
-      }}
-    >
-      Limpiar Filtros
-    </button>
+            onClick={() =>
+              setFilters({
+                numero: "",
+                estado: "",
+                activos: "",
+                tipo: "",
+                inicio: "",
+                fin: "",
+                cantidad: 1,
+              })
+            }
+            style={{
+              backgroundColor: "#a32126",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "25px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              color: "white",
+            }}
+          >
+            Limpiar Filtros
+          </button>
           <div className="d-flex align-items-center gap-3">
             <div className="d-flex align-items-center gap-2">
               <label style={{ fontWeight: "bold" }}>Fecha - Inicio:</label>
@@ -306,7 +318,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                 <FormularioMantenimiento
                   closeModal={cerrarFormulario}
                   recargarTabla={cargarMantenimientos}
-                  />
+                />
               </div>
             </div>
           </div>
@@ -403,12 +415,14 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 style={{
-                  backgroundColor: currentPage === totalPages ? "#d3d3d3" : "#a32126",
+                  backgroundColor:
+                    currentPage === totalPages ? "#d3d3d3" : "#a32126",
                   color: "white",
                   border: "none",
                   padding: "10px 20px",
                   borderRadius: "5px",
-                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  cursor:
+                    currentPage === totalPages ? "not-allowed" : "pointer",
                   fontWeight: "bold",
                 }}
               >
