@@ -2,7 +2,7 @@ const connection = require('../models/db');
 
 module.exports.getLaboratoristas = (req, res) => {
     const query = `
-        SELECT * FROM gestionactivos.laboratoristas;
+        SELECT * FROM laboratoristas;
     `;
 
     try {

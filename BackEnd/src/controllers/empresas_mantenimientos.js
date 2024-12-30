@@ -2,7 +2,7 @@ const connection = require('../models/db');
 
 module.exports.empresas_mantenimientos = (req, res) => {
     const query = `
-        SELECT * FROM gestionactivos.empresas_mantenimientos;
+        SELECT * FROM empresas_mantenimientos;
     `;
 
     try {
