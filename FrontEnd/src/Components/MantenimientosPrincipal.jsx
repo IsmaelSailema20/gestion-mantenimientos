@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import FormularioMantenimiento from "../Components/FormularioMantenimiento";
+import { useNavigate } from "react-router-dom"; // Importa el hook useNavigate
 
 const MantenimientosPrincipal = ({ onEdit }) => {
   const [mantenimientos, setMantenimientos] = useState([]);
@@ -24,6 +25,8 @@ const MantenimientosPrincipal = ({ onEdit }) => {
   useEffect(() => {
     cargarMantenimientos();
   }, []);
+  const navigate = useNavigate();
+
   const cargarMantenimientos = async () => {
     try {
       const response = await axios.get("http://localhost:5000/mantenimientos");
@@ -88,7 +91,10 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       nuevoMantenimiento,
     ]);
   };
-
+  const handleVerClick = (id) => {
+    // Redirige a la ruta de mantenimientoVisual pasando el id como parámetro
+    navigate(`/mantenimientoVisual/${id}`);
+  };
   // Calcular mantenimientos para la página actual
   const totalPages = Math.ceil(filteredMantenimientos.length / itemsPerPage);
   const currentMantenimientos = filteredMantenimientos.slice(
@@ -369,7 +375,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                       <td>{mantenimiento.descripcion}</td>
                       <td className="text-center" style={{ padding: 0 }}>
                         <button
-                          onClick={() => onEdit(mantenimiento)}
+                          onClick={() => handleVerClick(mantenimiento.numero)} // Usa el id para redirigir
                           style={{
                             backgroundColor: "#a32126",
                             color: "white",
