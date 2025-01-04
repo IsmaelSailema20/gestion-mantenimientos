@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import SuccessModal from "./SuccessModal";
 import ErrorModal from "./ErrorModal";
 import PropTypes from "prop-types";
+import Componentes from "./Componentes";
 
 function FormularioActivo({
   closeModal,
@@ -30,6 +31,15 @@ function FormularioActivo({
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
+  const [detallesComponentes, setDetallesComponentes] = useState({
+    procesador: "",
+    ram: "",
+    disco: "",
+    grafica: "",
+    fuente: "",
+  });
+  const [esCPU, setEsCPU] = useState(false); // Determina si el activo es CPU
+
   const [modalDataError, setModalDataError] = useState({
     titulo: "",
     mensaje: "",
@@ -90,18 +100,52 @@ function FormularioActivo({
     // Validar campos requeridos
     const newErrors = {};
     let fieldsAreEmpty = false;
+
     Object.keys(formData).forEach((key) => {
       const value = formData[key];
-      if (typeof value === "string" && value.trim() === "") {
-        newErrors[key] = true; // Marcar campo como vacío
-        fieldsAreEmpty = true; // Detectar si hay campos vacíos
-      } else if (value === null || value === undefined || value === "") {
-        newErrors[key] = true; // Considerar nulos o indefinidos como vacíos
+
+      // Caso específico: Validación del campo "especificaciones"
+
+      if (key === "especificaciones" && esCPU) {
+        console.log("Saltando validacion");
+        newErrors[key] = false; // Campo no es obligatorio
+        return; // Salir de esta iteración
+      }
+
+      // Si no es CPU, validar el contenido del campo "especificaciones"
+      if (!value || (typeof value === "string" && value.trim() === "")) {
+        newErrors[key] = true; // Campo vacío
+        fieldsAreEmpty = true;
+      } else {
+        newErrors[key] = false;
+      }
+
+      // Validación general para los demás campos
+      if (!value || (typeof value === "string" && value.trim() === "")) {
+        newErrors[key] = true; // Campo vacío
         fieldsAreEmpty = true;
       } else {
         newErrors[key] = false;
       }
     });
+    // Validar campos del componente `Componentes` solo si es CPU
+    if (esCPU && !esEdicion) {
+      console.log("Validando componentes porque es CPU.");
+      Object.entries(detallesComponentes).forEach(([key, value]) => {
+        if (!value || value.trim() === "") {
+          console.log(`Componente vacío detectado: ${key}`);
+          newErrors[key] = true;
+          fieldsAreEmpty = true;
+        } else {
+          newErrors[key] = false;
+        }
+      });
+    } else {
+      // Asegúrate de que los errores relacionados con componentes no se marquen si no es CPU
+      Object.keys(detallesComponentes).forEach((key) => {
+        newErrors[key] = false;
+      });
+    }
 
     // Validación del estado (debe ser un valor)
     if (formData.estado === "") {
@@ -112,8 +156,9 @@ function FormularioActivo({
     }
 
     setErrors(newErrors);
-
-    // Si hay campos vacíos, mostrar el modal de error y no enviar el formulario
+    console.log("Final newErrors object:", newErrors);
+    console.log("fieldsAreEmpty:", fieldsAreEmpty);
+    // Mostrar modal si hay campos vacíos
     if (fieldsAreEmpty) {
       setModalDataError({
         titulo: "Campos vacíos",
@@ -137,6 +182,7 @@ function FormularioActivo({
       id_ubicacion: selectedBloque,
       id_modelo: selectedModelo,
       id_laboratorista: selectedEncargado,
+      componentes: esCPU ? Object.values(detallesComponentes) : [],
     };
 
     if (esEdicion) {
@@ -262,7 +308,7 @@ function FormularioActivo({
           setProveedores(proveedoresResponse.data);
           setBloques(edificiosResponse.data);
           setActivos(tipoActivosResponse.data);
-          console.log("Datos obtenidos:", tipoActivosResponse.data);
+          //console.log("Datos obtenidos:", tipoActivosResponse.data);
         }
       )
       .catch((error) => {
@@ -274,12 +320,13 @@ function FormularioActivo({
   useEffect(() => {
     if (activoTabla) {
       console.log("Activos Tabla", activoTabla);
+      setEsCPU(activoTabla.nombre_activo?.toLowerCase() === "cpu");
 
       setFormData({
         numeroSerie: activoTabla.numero_serie || "",
         procesoCompra: activoTabla.proceso_compra || "",
         estado: activoTabla.estado || "",
-        especificaciones: activoTabla.especificaciones || "",
+        especificaciones: activoTabla.especificaciones || " ",
         observaciones: activoTabla.observaciones || "",
         id_tipo: activoTabla.id_tipo || "",
         id_proveedor: activoTabla.id_proveedor || "",
@@ -306,7 +353,7 @@ function FormularioActivo({
         fetchMarcas(activoTabla.id_tipo); // Cargar marcas asociadas al tipo activo
       }
       if (activoTabla.id_marca) {
-        fetchModelos(activoTabla.id_marca); // Cargar modelos asociados a la marca
+        fetchModelos(activoTabla.id_marca, activoTabla.id_tipo); // Cargar modelos asociados a la marca
       }
     }
   }, [activoTabla]);
@@ -333,14 +380,17 @@ function FormularioActivo({
       });
   };
 
-  const fetchModelos = (idMarca) => {
+  const fetchModelos = (idMarca, idTipo) => {
     axios
-      .get(`http://localhost:5000/modelos/${idMarca}`)
+      .get("http://localhost:5000/modelos", {
+        params: { idMarca, idTipo },
+      })
       .then((response) => {
-        setModelos(response.data); // Actualizar lista de modelos
+        setModelos(response.data);
+        console.log("Modelos obtenidos:", response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener modelos:", error);
+        console.error("Error al obtener los modelos:", error);
       });
   };
 
@@ -373,6 +423,14 @@ function FormularioActivo({
     setSelectedActivo(activoId);
     formData.activo = activoId;
 
+    // Verificar si el tipo de activo es CPU y actualizar el estado
+    const activoSeleccionado = activos.find(
+      (activo) => activo.id_tipo === parseInt(activoId)
+    );
+    setEsCPU(
+      activoSeleccionado && activoSeleccionado.nombre.toLowerCase() === "cpu"
+    );
+
     // Llamada a la API para obtener marcas relacionadas con el activo
     axios
       .get(`http://localhost:5000/marcas/${activoId}`) // Endpoint para obtener marcas por activo
@@ -390,15 +448,23 @@ function FormularioActivo({
     const marcaId = e.target.value;
     setSelectedMarca(marcaId);
     formData.marca = marcaId;
+    console.log("Marca seleccionada:", marcaId);
+    console.log("Activo seleccionado:", selectedActivo);
 
     // Llamada a la API para obtener modelos relacionados con la marca
     axios
-      .get(`http://localhost:5000/modelos/${marcaId}`) // Endpoint para obtener modelos por marca
+      .get("http://localhost:5000/modelos", {
+        params: {
+          idMarca: marcaId,
+          idTipo: selectedActivo,
+        },
+      })
       .then((response) => {
         setModelos(response.data); // Actualizar modelos en el estado
+        console.log("Modelos obtenidos:", response.data);
       })
       .catch((error) => {
-        console.error("Error al obtener modelos:", error);
+        console.error("Error al obtener los modelos:", error);
       });
   };
 
@@ -407,6 +473,14 @@ function FormularioActivo({
     const modeloId = e.target.value;
     setSelectedModelo(modeloId);
     formData.modelo = modeloId;
+  };
+  const handleChangeComponent = (e, id) => {
+    const { value } = e.target;
+
+    setDetallesComponentes((prevState) => ({
+      ...prevState,
+      [id]: value,
+    }));
   };
   return (
     <>
@@ -738,27 +812,63 @@ function FormularioActivo({
             </div>
           </div>
         </div>
-        {/* Especificaciones (Textbox) */}
+
         <div className="form-group">
-          <label
-            htmlFor="especificaciones"
-            style={{
-              fontWeight: "bold",
-              marginBottom: "10px",
-              marginTop: "10px",
-            }}
-          >
-            Especificaciones
-          </label>
-          <textarea
-            maxLength="500"
-            className={getInputClass("especificaciones")}
-            id="especificaciones"
-            value={capitalizeFirstLetter(formData.especificaciones)}
-            onChange={handleChange}
-            placeholder="Especificaciones"
-            rows="3"
-          ></textarea>
+          {/* Mostrar Especificaciones si NO es CPU y estamos en modo edición */}
+          {!esCPU && esEdicion && (
+            <>
+              <label
+                htmlFor="especificaciones"
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "10px",
+                  marginTop: "10px",
+                }}
+              >
+                Especificaciones
+              </label>
+              <textarea
+                maxLength="500"
+                className={getInputClass("especificaciones")}
+                id="especificaciones"
+                value={capitalizeFirstLetter(formData.especificaciones)}
+                onChange={handleChange}
+                placeholder="Especificaciones"
+                rows="3"
+              ></textarea>
+            </>
+          )}
+          {!esCPU && !esEdicion && (
+            <>
+              <label
+                htmlFor="especificaciones"
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "10px",
+                  marginTop: "10px",
+                }}
+              >
+                Especificaciones
+              </label>
+              <textarea
+                maxLength="500"
+                className={getInputClass("especificaciones")}
+                id="especificaciones"
+                value={capitalizeFirstLetter(formData.especificaciones)}
+                onChange={handleChange}
+                placeholder="Especificaciones"
+                rows="3"
+              ></textarea>
+            </>
+          )}
+
+          {/* Mostrar el componente dinámico si es CPU y NO estamos en modo edición */}
+          {esCPU && !esEdicion && (
+            <Componentes
+              handleChangeComponent={handleChangeComponent}
+              getInputClass={(field) => getInputClass(field)}
+            />
+          )}
         </div>
 
         {/* Observaciones (Textbox) */}
@@ -860,6 +970,7 @@ FormularioActivo.propTypes = {
     id_laboratorista: PropTypes.string,
     tipo_activo: PropTypes.string,
     id_tipo: PropTypes.number,
+    nombre_activo: PropTypes.string,
   }),
   esEdicion: PropTypes.bool,
 };

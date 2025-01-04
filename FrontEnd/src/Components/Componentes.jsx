@@ -11,6 +11,7 @@ function Componentes({ handleChangeComponent, getInputClass }) {
     fuentes: [],
   });
 
+  // Cargar los componentes desde la base de datos
   useEffect(() => {
     const fetchComponentes = async () => {
       try {

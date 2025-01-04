@@ -9,6 +9,7 @@ module.exports.loteController = async (req, res) => {
                 else resolve(results.length > 0 ? results[0].id : null);
             });
         });
+      
 
     const obtenerDatosRelacionados = async (bloque, laboratorio) => {
         try {
@@ -100,16 +101,31 @@ module.exports.loteController = async (req, res) => {
             throw new Error(error.message);
         }
     };
-
+    const obtenerIdComponente = (nombreComponente) =>
+        new Promise((resolve, reject) => {
+            const query = "SELECT id_componente FROM componentes_internos WHERE nombre_componente = ?";
+            connection.query(query, [nombreComponente.trim()], (err, results) => {
+                if (err) {
+                    console.error(`Error al buscar el componente '${nombreComponente}':`, err);
+                    reject(err);
+                } else if (results.length === 0) {
+                    console.warn(`Componente no encontrado: ${nombreComponente}`);
+                    resolve(null); // No encontrado
+                } else {
+                    resolve(results[0].id_componente);
+                }
+            });
+        });
+  
     const insertarActivo = async (activo, idUbicacion, idModelo, idProveedor, idLaboratorista) => {
         return new Promise((resolve, reject) => {
             const query = `
-        INSERT INTO Activos (
-          numero_serie, proceso_compra, tipo, estado, 
-          id_ubicacion, id_proveedor, id_laboratorista, id_modelo, especificaciones, observaciones
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+                INSERT INTO Activos (
+                    numero_serie, proceso_compra, tipo, estado, 
+                    id_ubicacion, id_proveedor, id_laboratorista, id_modelo, especificaciones, observaciones
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
             connection.query(
                 query,
                 [
@@ -125,8 +141,8 @@ module.exports.loteController = async (req, res) => {
                     activo.observaciones,
                 ],
                 (err, results) => {
-                    if (err) reject(err);
-                    else resolve(results);
+                    if (err) return reject(err);
+                    resolve(results.insertId);
                 }
             );
         });
@@ -134,27 +150,73 @@ module.exports.loteController = async (req, res) => {
 
     const procesarRegistros = async () => {
         const resultados = [];
-
+    
         for (const activo of activos) {
+            const connectionPromise = connection.promise();
+            const componentes = activo.componentes
+                ? activo.componentes.split(",").map((comp) => comp.trim())
+                : [];
+    
+            await connectionPromise.beginTransaction(); // Iniciar la transacción
+    
             try {
+                // Obtener IDs relacionados para ubicación, modelo, proveedor y laboratorista
                 const idUbicacion = await obtenerDatosRelacionados(activo.bloque, activo.laboratorio);
                 const { idModelo, idProveedor, idLaboratorista } = await obtenerIdsRelacionados(
                     activo.modelo,
                     activo.proveedor,
                     activo.encargado
                 );
-
-                const resultado = await insertarActivo(activo, idUbicacion, idModelo, idProveedor, idLaboratorista);
-                resultados.push({ success: true, activo: activo.numeroSerie, resultado });
+    
+                // Insertar activo usando el método existente
+                const idActivo = await insertarActivo(
+                    activo,
+                    idUbicacion,
+                    idModelo,
+                    idProveedor,
+                    idLaboratorista
+                );
+    
+                // Insertar componentes asociados al activo (solo si tiene componentes)
+                if (componentes.length > 0) {
+                    await insertarComponentes(idActivo, componentes);
+                }
+    
+                await connectionPromise.commit(); // Confirmar la transacción
+                resultados.push({ success: true, activo: activo.numeroSerie });
             } catch (error) {
+                await connectionPromise.rollback(); // Deshacer la transacción en caso de error
                 console.error(`Error procesando activo ${activo.numeroSerie}:`, error.message);
                 resultados.push({ success: false, activo: activo.numeroSerie, error: error.message });
             }
         }
-
+    
         return resultados;
     };
-
+    
+    
+    
+    
+      const insertarComponentes = async (idActivo, componentes) => {
+        if (!componentes || componentes.length === 0) return;
+    
+        const values = [];
+        for (const nombreComponente of componentes) {
+          const idComponente = await obtenerIdComponente(nombreComponente);
+          if (!idComponente) {
+            throw new Error(`El componente '${nombreComponente}' no existe.`);
+          }
+          values.push([idActivo, idComponente]);
+        }
+    
+        return new Promise((resolve, reject) => {
+          const query = "INSERT INTO activos_componentes (id_activo, id_componente) VALUES ?";
+          connection.query(query, [values], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      };
     try {
         const resultados = await procesarRegistros();
         res.status(201).json({

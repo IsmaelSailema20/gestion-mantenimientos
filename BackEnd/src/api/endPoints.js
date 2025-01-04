@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const { ping } = require('../controllers/pingController.js');
 const { login } = require('../controllers/loginController.js');
 const { getActivos } = require('../controllers/home.Controlers.js');
@@ -22,14 +23,14 @@ const { activosporMantenimiento } = require("../controllers/activosporMantenimie
 const { finalizarMantenimiento } = require("../controllers/finalizarMantenimiento");
 const { insertarActividad } = require("../controllers/insertarActividad");
 const { consultarActividades } = require("../controllers/consultarActividades");
-
 const { consultarMantenimiento } = require("../controllers/consultarMantenimiento");
-const {getComponentes} = require('../controllers/componentesController.js');
+const { getComponentes } = require('../controllers/componentesController.js');
 const { componentesActuales } = require("../controllers/componentesActuales");
 const { guardarcomponentes } = require("../controllers/guardarcomponentes");
 const { actividadesPorMantenimiento } = require("../controllers/actividadesPorMantenimiento");
-
 const { finalizarmantenimientototal } = require("../controllers/finalizarmantenimientototal");
+const { getModelosInfo } = require('../controllers/modelosInfoController.js');
+
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -43,7 +44,7 @@ router.post('/crear-mantenimiento', crearMantenimiento);
 router.get('/empresas_mantenimientos', empresas_mantenimientos);
 router.get('/tiposActivos', getTipoActivos);
 router.get('/marcas/:idActivo', getMarcasPorActivo);
-router.get('/modelos/:idMarca', getModelosPorMarca);
+router.get('/modelos', getModelosPorMarca);
 router.post('/registrarLoteActivos', loteController);
 router.put('/actualizarActivo/:id_activo', actualizarActivos);
 router.get('/mantenimientos', getMantenimientos);
@@ -57,8 +58,8 @@ router.post('/consultarMantenimiento', consultarMantenimiento);
 router.post('/componentesActuales', componentesActuales);
 router.post('/guardarcomponentes', guardarcomponentes);
 router.post('/actividadesPorMantenimiento', actividadesPorMantenimiento);
-
-
 router.get('/componentes', getComponentes);
+router.get('/modelos-info', getModelosInfo); // Necesario para registrar por lotes
 
-module.exports = router; 
+module.exports = router;
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import FormularioMantenimiento from "../Components/FormularioMantenimiento";
@@ -49,6 +49,8 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       setMantenimientos(response.data);
       setIsLoading(false);
     } catch (error) {
+      console.log(error);
+
       setError("Error al obtener los datos del servidor");
       setIsLoading(false);
     }
