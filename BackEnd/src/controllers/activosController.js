@@ -5,15 +5,16 @@ module.exports.getActivosDisponibles = (req, res) => {
     SELECT 
     a.id_activo,
     a.numero_serie,
-       a.tipo,  
+    a.tipo,
     a.estado ,
     ta.nombre AS tipo_activo,
     CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion,
     a.fecha_registro
 FROM 
     activos a
-JOIN 
-    tipos_activo ta ON a.tipo = ta.id_tipo
+    JOIN modelos mo ON a.id_modelo = mo.id_modelo 
+    JOIN tipos_activo ta ON mo.id_tipo = ta.id_tipo 
+
 JOIN 
     edificio_laboratorio el ON a.id_ubicacion = el.id_laboratio_edificio
 JOIN 
