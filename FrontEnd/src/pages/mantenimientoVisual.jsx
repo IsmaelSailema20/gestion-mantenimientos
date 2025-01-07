@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ListadoActivo from "../Components/listadoActivosDispo";
@@ -16,7 +16,7 @@ function MantenimientoVisual() {
   const [mostrarTablaAgregar, setMostrarTablaAgregar] = useState(false);
   const [mostrarAgregarActividad, setMostrarAgregarActividad] = useState(false);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
@@ -25,15 +25,10 @@ function MantenimientoVisual() {
     mensaje: "",
   });
   const [isDisabled, setIsDisabled] = useState(false);
-  const handleOnSubmit = (updatedFormularios) => {
-    console.log("Componentes actualizados:", updatedFormularios);
-    alert("Actualización completada con éxito.");
-  };
 
   useEffect(() => {
     const fetchActivos = async () => {
       try {
-        setLoading(true);
         const response = await axios.post(
           "http://localhost:5000/activosporMantenimiento",
           { id }
@@ -42,8 +37,6 @@ function MantenimientoVisual() {
       } catch (err) {
         console.error("Error al obtener los activos:", err);
         setError("No se pudieron cargar los activos.");
-      } finally {
-        setLoading(false);
       }
     };
     const consultarMantenimiento = async () => {
@@ -318,7 +311,7 @@ function MantenimientoVisual() {
           </tbody>
         </table>
       </div>
-      
+
       {mostrarTablaAgregar && (
         <div
           className="modal fade show"

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import SuccessModal from "./SuccessModal";
 import ErrorModal from "./ErrorModal";
 import PropTypes from "prop-types";
-import Componentes from "./Componentes";
+import Componentes from "./componentes";
 
 function FormularioActivo({
   closeModal,
@@ -527,6 +527,7 @@ function FormularioActivo({
             value={selectedActivo}
             onChange={handleActivoChange}
             id="activo"
+            disabled={esEdicion}
           >
             <option value="">Seleccione un activo</option>
             {activos.map((activo) => (

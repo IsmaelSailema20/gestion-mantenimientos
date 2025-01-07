@@ -9,6 +9,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
+    codigo: "",
     numero: "",
     estado: "",
     activos: "", // Aquí es un campo numérico
@@ -73,8 +74,8 @@ const MantenimientosPrincipal = ({ onEdit }) => {
   // Filtrar mantenimientos
   const filteredMantenimientos = mantenimientos.filter((mantenimiento) => {
     return (
-      (filters.numero === "" ||
-        mantenimiento.numero.toString().includes(filters.numero)) &&
+      (filters.codigo === "" ||
+        mantenimiento.codigo.toString().includes(filters.codigo)) &&
       (filters.estado === "" ||
         mantenimiento.estado.includes(filters.estado)) &&
       (filters.tipo === "" || mantenimiento.tipo.includes(filters.tipo)) &&
@@ -139,16 +140,22 @@ const MantenimientosPrincipal = ({ onEdit }) => {
           >
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Buscar Por Código"
               style={{
                 border: "5px solid #a32126",
                 borderRadius: "20px",
                 padding: "5px 25px",
                 width: "100%",
               }}
-              name="numero"
-              value={filters.numero}
-              onChange={handleFilterChange}
+              name="codigo"
+              value={filters.codigo}
+              onChange={(e) => {
+                const { name, value } = e.target;
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  [name]: value.toUpperCase(), // Convierte el valor a mayúsculas
+                }));
+              }}
             />
             <button
               style={{
@@ -251,6 +258,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
           <button
             onClick={() =>
               setFilters({
+                codigo: "",
                 numero: "",
                 estado: "",
                 activos: "",
@@ -352,7 +360,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                 }}
               >
                 <tr>
-                  <th>N° Mantenimiento</th>
+                  <th>Código Mantenimiento</th>
                   <th>Inicio</th>
                   <th>Fin</th>
                   <th>Estado</th>
@@ -366,7 +374,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                 {currentMantenimientos.length > 0 ? (
                   currentMantenimientos.map((mantenimiento, index) => (
                     <tr key={index} style={{ height: "60px" }}>
-                      <td>{mantenimiento.numero}</td>
+                      <td>{mantenimiento.codigo}</td>
                       <td>{mantenimiento.inicio}</td>
                       <td>{mantenimiento.fin}</td>
                       <td>{mantenimiento.estado}</td>

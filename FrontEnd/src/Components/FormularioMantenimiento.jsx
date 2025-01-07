@@ -164,7 +164,9 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
         <input
           type="checkbox"
           onChange={(e) => selectAllActivos(e.target.checked)}
-          checked={selectedActivos.length === activos.length && activos.length > 0}
+          checked={
+            selectedActivos.length === activos.length && activos.length > 0
+          }
         />
         Seleccionar Todos
         <div
@@ -220,7 +222,11 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
                   <td>{activo.estado}</td>
                   <td>{activo.ubicacion}</td>
                   <td>
-                    {new Date(activo.fecha_registro).toISOString().split("T")[0]}
+                    {
+                      new Date(activo.fecha_registro)
+                        .toISOString()
+                        .split("T")[0]
+                    }
                   </td>
                 </tr>
               ))}
@@ -245,7 +251,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
           style={{ width: "200px" }}
           SelectProps={{ native: true }}
         >
-          <option value="">Entidad  Encargada</option>
+          <option value="">Entidad Encargada</option>
           <option value="laboratorista">Laboratorista</option>
           <option value="empresa">Empresa</option>
         </TextField>

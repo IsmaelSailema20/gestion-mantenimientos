@@ -1,22 +1,23 @@
 const connection = require("../models/db");
 
 module.exports.getMantenimientos = (req, res) => {
-  const { numero, estado, activos, tipo, inicio, fin } = req.query;
+  const { codigo, estado, activos, tipo, inicio, fin } = req.query;
   let whereClauses = [];
-  if (numero) whereClauses.push(`m.id_mantenimiento = ${connection.escape(numero)}`);
+  if (codigo) whereClauses.push(`m.codigo_mantenimiento  LIKE ${connection.escape('%'+ codigo + '%')}`);
   if (estado) whereClauses.push(`dm.estado_mantenimiento LIKE ${connection.escape('%' + estado + '%')}`);
   if (activos) whereClauses.push(`activos_agrupados.activos = ${connection.escape(activos)}`);
   if (tipo) whereClauses.push(`m.tipo LIKE ${connection.escape('%' + tipo + '%')}`);
-  if (inicio) whereClauses.push(`m.fecha_inicio >= ${connection.escape(inicio)}`);
-  if (fin) whereClauses.push(`m.fecha_fin <= ${connection.escape(fin)}`);
+  if (inicio) whereClauses.push(`DATE(m.fecha_inicio) = ${connection.escape(inicio)}`);
+  if (fin) whereClauses.push(`DATE(m.fecha_fin) = ${connection.escape(fin)}`);
   const where = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
-
+    
   const query = `
     SELECT 
     @row_number := @row_number + 1 AS orden, 
     m.id_mantenimiento AS numero,  
-    DATE_FORMAT(m.fecha_inicio, '%Y-%m-%d %H:%i:%s') AS inicio, 
-    DATE_FORMAT(m.fecha_fin, '%Y-%m-%d %H:%i:%s') AS fin,  
+    m.codigo_mantenimiento AS codigo,
+    DATE_FORMAT(m.fecha_inicio, '%Y-%m-%d') AS inicio, 
+    DATE_FORMAT(m.fecha_fin, '%Y-%m-%d') AS fin,  
     m.tipo AS tipo,
     dm.estado_mantenimiento AS estado,
     activos_agrupados.activos,
