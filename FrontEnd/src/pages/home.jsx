@@ -133,7 +133,7 @@ const Home = () => {
         style={{
           backgroundColor: "rgb(163, 33, 38)",
           color: "white",
-          height: "60px", // Reducir altura
+          height: "100px", // Reducir altura
           padding: "10px 20px", // Ajustar padding
         }}
         className="d-flex justify-content-between align-items-center"
@@ -179,8 +179,8 @@ const Home = () => {
               color:
                 rol === "admin" || rol === "laboratorista" ? "black" : "white",
               borderRadius: "35px",
-              fontSize: "18px", // Reducir tamaño de texto
-              padding: "5px 15px", // Reducir padding
+              fontSize: "20px", // Reducir tamaño de texto
+              padding: "10px 20px", // Reducir padding
               fontWeight: "bold",
               cursor: rol === "admin" ? "pointer" : "not-allowed",
               opacity: rol === "admin" ? 1 : 0.6,
