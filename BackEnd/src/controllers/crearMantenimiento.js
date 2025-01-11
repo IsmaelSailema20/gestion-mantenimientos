@@ -1,7 +1,7 @@
 const connection = require('../models/db'); // Conexión a la base de datos
 
 module.exports.crearMantenimiento = (req, res) => {
-  const { tipo, descripcion, identificador, activos } = req.body;
+  const { tipo, descripcion, identificador, activos,fecha } = req.body;
 
   // Verificar primero en la tabla de laboratoristas
   const queryVerificarLaboratorista = `
@@ -18,10 +18,10 @@ module.exports.crearMantenimiento = (req, res) => {
       // Si es un laboratorista
       const queryMantenimiento = `
         INSERT INTO mantenimientos (tipo, fecha_inicio, observaciones, cedula_laboratorista) 
-        VALUES (?, NOW(), ?, ?)
+        VALUES (?, ?, ?, ?)
       `;
 
-      connection.query(queryMantenimiento, [tipo, descripcion, identificador], (err, result) => {
+      connection.query(queryMantenimiento, [tipo, fecha, descripcion, identificador], (err, result) => {
         if (err) {
           console.error('Error al crear mantenimiento:', err);
           return res.status(500).json({ error: 'Error al crear mantenimiento', details: err.message });
@@ -76,10 +76,10 @@ module.exports.crearMantenimiento = (req, res) => {
           // Si es una empresa
           const queryMantenimiento = `
             INSERT INTO mantenimientos (tipo, fecha_inicio, observaciones, ruc_empresa) 
-            VALUES (?, NOW(), ?, ?)
+            VALUES (?, ?, ?, ?)
           `;
 
-          connection.query(queryMantenimiento, [tipo, descripcion, identificador], (err, result) => {
+          connection.query(queryMantenimiento, [tipo, fecha,descripcion, identificador], (err, result) => {
             if (err) {
               console.error('Error al crear mantenimiento:', err);
               return res.status(500).json({ error: 'Error al crear mantenimiento', details: err.message });
