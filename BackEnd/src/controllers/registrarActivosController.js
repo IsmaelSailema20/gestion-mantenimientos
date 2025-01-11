@@ -25,6 +25,11 @@ module.exports.registrarActivos = (req, res) => {
 
     // Función para insertar componentes relacionados con el activo
     const insertarComponentes = (idActivo, componentes, callback) => {
+      if (!Array.isArray(componentes) || componentes.length === 0) {
+        // Si no hay componentes, continuar sin insertar
+        return callback(null);
+      }
+
       const insertComponentesQuery = `
         INSERT INTO activos_componentes (id_activo, id_componente)
         VALUES ?

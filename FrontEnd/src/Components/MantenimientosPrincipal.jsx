@@ -318,17 +318,23 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       </div>
       {mostrarRegFormulario && (
         <div
-          className="modal fade show"
-          style={{ display: "block" }}
+          className="modal fade show d-flex justify-content-center align-items-center"
+          style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }} // Fondo semitransparente
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
         >
           <div
             className="modal-dialog"
-            style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            style={{
+              minHeight: "95%",
+              minWidth: "95%",
+            }}
           >
-            <div className="modal-content">
-              <div className="modal-body">
+            <div
+              className="modal-content overflow-auto"
+              style={{ height: "750px", marginTop: "30px" }}
+            >
+              <div className="modal-body" style={{ height: "100%" }}>
                 <FormularioMantenimiento
                   closeModal={cerrarFormulario}
                   recargarTabla={cargarMantenimientos}

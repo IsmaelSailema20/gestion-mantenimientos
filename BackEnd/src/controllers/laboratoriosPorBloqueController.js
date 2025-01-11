@@ -1,4 +1,4 @@
-// Suponiendo que tienes una conexión a tu base de datos
+
 const connection = require('../models/db');
 
 // Obtener laboratorios por bloque

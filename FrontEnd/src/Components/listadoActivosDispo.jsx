@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import SuccessModal from "./SuccessModal";
 import ErrorModal from "./ErrorModal";
 
-function listadoactivo({ closeModal, idMantenimiento }) {
+function Listadoactivo({ closeModal, idMantenimiento }) {
   const [activos, setActivos] = useState([]);
   const [selectedActivos, setSelectedActivos] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -236,4 +236,4 @@ function listadoactivo({ closeModal, idMantenimiento }) {
   );
 }
 
-export default listadoactivo;
+export default Listadoactivo;

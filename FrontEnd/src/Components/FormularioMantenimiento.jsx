@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import SuccessModal from "./SuccessModal";
 import ErrorModal from "./ErrorModal";
 import PropTypes from "prop-types";
-import Box from "@mui/material/Box";
+import TablaActivosMntenimientos from "./TablaActivosMantenimientos";
 import TextField from "@mui/material/TextField";
 
 function FormularioMantenimiento({ closeModal, recargarTabla }) {
@@ -15,6 +15,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
+  const [fechaInicio, setFechaInicio] = useState("");
   const [modalDataError, setModalDataError] = useState({
     titulo: "",
     mensaje: "",
@@ -142,10 +143,41 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
     }
   };
 
+  const columnas = [
+    { header: "Código", render: (activo) => activo.numero_serie },
+    { header: "Tipo", render: (activo) => activo.tipo },
+    {
+      header: "Fecha Registro",
+      render: (activo) =>
+        new Date(activo.fecha_registro).toISOString().split("T")[0],
+    },
+    { header: "Ubicación", render: (activo) => activo.ubicacion },
+    { header: "Proveedor", render: (activo) => activo.proveedor },
+    { header: "Clase", render: (activo) => activo.clase },
+  ];
+
+  const filtrosConfig = [
+    {
+      field: "ubicacion",
+      apiEndpoint: "http://localhost:5000/ubicaciones-filtro",
+    },
+    {
+      field: "tipo",
+      options: ["Informático", "No Informático"],
+    },
+    {
+      field: "proveedor",
+      apiEndpoint: "http://localhost:5000/proveedores-filtro",
+    },
+    {
+      field: "clase",
+      apiEndpoint: "http://localhost:5000/clase-filtro",
+    },
+  ];
   return (
-    <div>
-      <div className="d-flex justify-content-between text-center align-items-center mb-4">
-        <h4>Registrar Nuevo Mantenimiento</h4>
+    <div className="container p-4 ">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4 className="mb-0">Registrar Nuevo Mantenimiento</h4>
         <span
           className="close"
           style={{
@@ -160,161 +192,117 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
         </span>
       </div>
 
-      <div>
-        <input
-          type="checkbox"
-          onChange={(e) => selectAllActivos(e.target.checked)}
-          checked={
-            selectedActivos.length === activos.length && activos.length > 0
-          }
-        />
-        Seleccionar Todos
-        <div
-          style={{
-            maxHeight: "300px",
-            overflowY: "auto",
-            border: "1px solid #ddd",
-            borderRadius: "5px",
-            padding: "10px",
-          }}
-        >
-          <table
-            className="table-bordered"
-            style={{ border: "2px solid black", width: "100%" }}
+      <div className="row g-3">
+        {/* Columnas de la izquierda: dos filas */}
+        <div className="col-md-8">
+          <div className="row">
+            {/* Primera fila: Entidad Encargada y Encargado */}
+            <div className="col-md-6">
+              <TextField
+                select
+                value={tipoEncargado}
+                onChange={(e) => setTipoEncargado(e.target.value)}
+                variant="outlined"
+                className="form-control"
+                SelectProps={{ native: true }}
+                label="Entidad Encargada"
+              >
+                <option value=""></option>
+                <option value="laboratorista">Laboratorista</option>
+                <option value="empresa">Empresa</option>
+              </TextField>
+            </div>
+            <div className="col-md-6">
+              <TextField
+                select
+                value={identificador}
+                onChange={(e) => setIdentificador(e.target.value)}
+                variant="outlined"
+                className="form-control"
+                SelectProps={{ native: true }}
+                label="Encargado"
+              >
+                <option value=""></option>
+                {encargados.map((encargado) => (
+                  <option
+                    key={encargado.id}
+                    value={encargado.cedula || encargado.ruc}
+                  >
+                    {tipoEncargado === "laboratorista" && tipoEncargado
+                      ? `${encargado.nombre} ${encargado.apellido}`
+                      : encargado.nombre}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+          </div>
+
+          <div className="row mt-3">
+            {/* Segunda fila: Fecha de Fin y Tipo de Mantenimiento */}
+            <div className="col-md-6">
+              <TextField
+                type="date"
+                label="Fecha de Inicio"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                variant="outlined"
+                className="form-control"
+                InputLabelProps={{ shrink: true }}
+              />
+            </div>
+            <div className="col-md-6">
+              <TextField
+                select
+                value={tipo}
+                onChange={(e) => setTipo(e.target.value)}
+                variant="outlined"
+                className="form-control"
+                SelectProps={{ native: true }}
+                label="Tipo de Mantenimiento"
+              >
+                <option value=""></option>
+                <option value="preventivo">Preventivo</option>
+                <option value="correctivo">Correctivo</option>
+              </TextField>
+            </div>
+          </div>
+        </div>
+
+        {/* Columna de la derecha: Descripción */}
+        <div className="col-md-4 d-flex align-items-center">
+          <TextField
+            label="Descripción del mantenimiento"
+            inputProps={{ maxLength: 70 }}
+            variant="outlined"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            multiline
+            rows={4}
+            className="form-control"
+          />
+        </div>
+
+        {/* Botón de Crear */}
+        <div className="col-12 text-end">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="btn btn-danger"
           >
-            <thead
-              className="p-4"
-              style={{
-                backgroundColor: "#921c21",
-                height: "50px",
-                color: "white",
-                textAlign: "center",
-              }}
-            >
-              <tr>
-                <th scope="col">Seleccionar</th>
-                <th scope="col">Número de Serie</th>
-                <th scope="col">Clase</th>
-                <th scope="col">Tipo de Activo</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Ubicación</th>
-                <th scope="col">Fecha Registro</th>
-              </tr>
-            </thead>
-            <tbody style={{ textAlign: "center" }}>
-              {activos.map((activo) => (
-                <tr key={activo.id_activo} style={{ height: "60px" }}>
-                  <td className="text-center">
-                    <input
-                      style={{
-                        transform: "scale(1.5)",
-                        margin: "5px",
-                        cursor: "pointer",
-                      }}
-                      type="checkbox"
-                      checked={selectedActivos.includes(activo.id_activo)}
-                      onChange={() => handleSelectActivo(activo.id_activo)}
-                    />
-                  </td>
-                  <td>{activo.numero_serie}</td>
-                  <td>{activo.tipo_activo}</td>
-                  <td>{activo.tipo}</td>
-                  <td>{activo.estado}</td>
-                  <td>{activo.ubicacion}</td>
-                  <td>
-                    {
-                      new Date(activo.fecha_registro)
-                        .toISOString()
-                        .split("T")[0]
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            Crear Mantenimiento
+          </button>
         </div>
       </div>
+      <TablaActivosMntenimientos
+        activos={activos}
+        selectedActivos={selectedActivos}
+        handleSelectActivo={handleSelectActivo}
+        selectAllActivos={selectAllActivos}
+        columnas={columnas}
+        filtrosConfig={filtrosConfig}
+      />
 
-      <div
-        style={{
-          marginTop: "7px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}
-      >
-        <TextField
-          select
-          value={tipoEncargado}
-          onChange={(e) => setTipoEncargado(e.target.value)}
-          variant="outlined"
-          style={{ width: "200px" }}
-          SelectProps={{ native: true }}
-        >
-          <option value="">Entidad Encargada</option>
-          <option value="laboratorista">Laboratorista</option>
-          <option value="empresa">Empresa</option>
-        </TextField>
-
-        {tipoEncargado && (
-          <TextField
-            select
-            value={identificador}
-            onChange={(e) => setIdentificador(e.target.value)}
-            variant="outlined"
-            style={{ width: "250px" }}
-            SelectProps={{ native: true }}
-          >
-            <option value="">Encargado</option>
-            {encargados.map((encargado) => (
-              <option
-                key={encargado.id}
-                value={encargado.cedula || encargado.ruc}
-              >
-                {tipoEncargado === "laboratorista"
-                  ? encargado.nombre + " " + encargado.apellido
-                  : encargado.nombre}
-              </option>
-            ))}
-          </TextField>
-        )}
-
-        <TextField
-          select
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          variant="outlined"
-          style={{ width: "200px" }}
-          SelectProps={{ native: true }}
-        >
-          <option value="">Tipo Mantenimiento</option>
-          <option value="preventivo">Preventivo</option>
-          <option value="correctivo">Correctivo</option>
-        </TextField>
-
-        <TextField
-          label="Descripción"
-          inputProps={{ maxLength: 70 }}
-          variant="outlined"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          multiline
-          style={{ width: "250px" }}
-        />
-
-        <button
-          onClick={handleSubmit}
-          className="btn"
-          style={{
-            backgroundColor: "rgb(163, 33, 38)",
-            color: "white",
-            marginLeft: 100,
-          }}
-        >
-          Crear Mantenimiento
-        </button>
-      </div>
-
+      {/* Modales de Éxito y Error */}
       {showModal && (
         <SuccessModal
           titulo={modalData.titulo}

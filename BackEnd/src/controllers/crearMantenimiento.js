@@ -1,37 +1,47 @@
 const connection = require('../models/db'); // Conexión a la base de datos
+
 module.exports.crearMantenimiento = (req, res) => {
   const { tipo, descripcion, identificador, activos } = req.body;
 
-  const queryAutoIncrement = `SHOW TABLE STATUS LIKE 'mantenimientos'`;
-  connection.query(queryAutoIncrement, (err, rows) => {
+  // Verificar primero en la tabla de laboratoristas
+  const queryVerificarLaboratorista = `
+    SELECT * FROM laboratoristas WHERE cedula = ?
+  `;
+
+  connection.query(queryVerificarLaboratorista, [identificador], (err, results) => {
     if (err) {
-      return res.status(500).json({ error: 'Error al obtener el siguiente ID' });
+      console.error('Error al verificar identificador en laboratoristas:', err);
+      return res.status(500).json({ error: 'Error al verificar identificador en laboratoristas', details: err.message });
     }
 
-    const nextId = rows[0].Auto_increment; // Próximo ID para la inserción
-    const codigoMantenimiento = `MNT_${new Date().getFullYear()}_${nextId.toString().padStart(3, '0')}`;
+    if (results.length > 0) {
+      // Si es un laboratorista
+      const queryMantenimiento = `
+        INSERT INTO mantenimientos (tipo, fecha_inicio, observaciones, cedula_laboratorista) 
+        VALUES (?, NOW(), ?, ?)
+      `;
 
-    // Verificar primero en la tabla de laboratoristas
-    const queryVerificarLaboratorista = `
-      SELECT * FROM laboratoristas WHERE cedula = ?
-    `;
+      connection.query(queryMantenimiento, [tipo, descripcion, identificador], (err, result) => {
+        if (err) {
+          console.error('Error al crear mantenimiento:', err);
+          return res.status(500).json({ error: 'Error al crear mantenimiento', details: err.message });
+        }
 
-    connection.query(queryVerificarLaboratorista, [identificador], (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error al verificar identificador' });
-      }
+        const idMantenimiento = result.insertId;
+        const codigoMantenimiento = `MNT_${new Date().getFullYear()}_${idMantenimiento.toString().padStart(3, '0')}`;
 
-      if (results.length > 0) {
-        // Si es un laboratorista
-        const queryMantenimiento = `
-          INSERT INTO mantenimientos (codigo_mantenimiento, tipo, fecha_inicio, observaciones, cedula_laboratorista) 
-          VALUES (?, ?, NOW(), ?, ?)
+        // Actualizar el código de mantenimiento con el ID generado
+        const queryActualizarCodigo = `
+          UPDATE mantenimientos 
+          SET codigo_mantenimiento = ? 
+          WHERE id_mantenimiento = ?
         `;
+        connection.query(queryActualizarCodigo, [codigoMantenimiento, idMantenimiento], (err) => {
+          if (err) {
+            console.error('Error al actualizar código de mantenimiento:', err);
+            return res.status(500).json({ error: 'Error al actualizar código de mantenimiento', details: err.message });
+          }
 
-        connection.query(queryMantenimiento, [codigoMantenimiento, tipo, descripcion, identificador], (err, result) => {
-          if (err) return res.status(500).json({ error: 'Error al crear mantenimiento' });
-
-          const idMantenimiento = result.insertId;
           const detalleQueries = activos.map(
             (idActivo) => `(${idMantenimiento}, ${idActivo}, 'en proceso', NOW())`
           ).join(',');
@@ -42,32 +52,54 @@ module.exports.crearMantenimiento = (req, res) => {
           `;
 
           connection.query(queryDetalle, (err) => {
-            if (err) return res.status(500).json({ error: 'Error al registrar detalle' });
+            if (err) {
+              console.error('Error al registrar detalle:', err);
+              return res.status(500).json({ error: 'Error al registrar detalle', details: err.message });
+            }
             res.status(200).json({ message: 'Mantenimiento creado con éxito', codigoMantenimiento });
           });
         });
-      } else {
-        // Verificar en la tabla de empresas_mantenimientos si no es un laboratorista
-        const queryVerificarEmpresa = `
-          SELECT * FROM empresas_mantenimientos WHERE ruc = ?
-        `;
+      });
+    } else {
+      // Verificar en la tabla de empresas_mantenimientos si no es un laboratorista
+      const queryVerificarEmpresa = `
+        SELECT * FROM empresas_mantenimientos WHERE ruc = ?
+      `;
 
-        connection.query(queryVerificarEmpresa, [identificador], (err, results) => {
-          if (err) {
-            return res.status(500).json({ error: 'Error al verificar identificador' });
-          }
+      connection.query(queryVerificarEmpresa, [identificador], (err, results) => {
+        if (err) {
+          console.error('Error al verificar identificador en empresas_mantenimientos:', err);
+          return res.status(500).json({ error: 'Error al verificar identificador en empresas_mantenimientos', details: err.message });
+        }
 
-          if (results.length > 0) {
-            // Si es una empresa
-            const queryMantenimiento = `
-              INSERT INTO mantenimientos (codigo_mantenimiento, tipo, fecha_inicio, observaciones, ruc_empresa) 
-              VALUES (?, ?, NOW(), ?, ?)
+        if (results.length > 0) {
+          // Si es una empresa
+          const queryMantenimiento = `
+            INSERT INTO mantenimientos (tipo, fecha_inicio, observaciones, ruc_empresa) 
+            VALUES (?, NOW(), ?, ?)
+          `;
+
+          connection.query(queryMantenimiento, [tipo, descripcion, identificador], (err, result) => {
+            if (err) {
+              console.error('Error al crear mantenimiento:', err);
+              return res.status(500).json({ error: 'Error al crear mantenimiento', details: err.message });
+            }
+
+            const idMantenimiento = result.insertId;
+            const codigoMantenimiento = `MNT_${new Date().getFullYear()}_${idMantenimiento.toString().padStart(3, '0')}`;
+
+            // Actualizar el código de mantenimiento con el ID generado
+            const queryActualizarCodigo = `
+              UPDATE mantenimientos 
+              SET codigo_mantenimiento = ? 
+              WHERE id_mantenimiento = ?
             `;
+            connection.query(queryActualizarCodigo, [codigoMantenimiento, idMantenimiento], (err) => {
+              if (err) {
+                console.error('Error al actualizar código de mantenimiento:', err);
+                return res.status(500).json({ error: 'Error al actualizar código de mantenimiento', details: err.message });
+              }
 
-            connection.query(queryMantenimiento, [codigoMantenimiento, tipo, descripcion, identificador], (err, result) => {
-              if (err) return res.status(500).json({ error: 'Error al crear mantenimiento' });
-
-              const idMantenimiento = result.insertId;
               const detalleQueries = activos.map(
                 (idActivo) => `(${idMantenimiento}, ${idActivo}, 'en proceso', NOW())`
               ).join(',');
@@ -78,15 +110,19 @@ module.exports.crearMantenimiento = (req, res) => {
               `;
 
               connection.query(queryDetalle, (err) => {
-                if (err) return res.status(500).json({ error: 'Error al registrar detalle' });
+                if (err) {
+                  console.error('Error al registrar detalle:', err);
+                  return res.status(500).json({ error: 'Error al registrar detalle', details: err.message });
+                }
                 res.status(200).json({ message: 'Mantenimiento creado con éxito', codigoMantenimiento });
               });
             });
-          } else {
-            return res.status(400).json({ error: 'Encargado o empresa no encontrado' });
-          }
-        });
-      }
-    });
+          });
+        } else {
+          console.error('Encargado o empresa no encontrado');
+          return res.status(400).json({ error: 'Encargado o empresa no encontrado' });
+        }
+      });
+    }
   });
 };

@@ -31,6 +31,12 @@ function FormularioActivo({
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
+  const [selectedEstado, setSelectedEstado] = useState("");
+
+  const handleEstadoChange = (event) => {
+    formData.estado = event.target.value;
+    setSelectedEstado(event.target.value);
+  };
   const [detallesComponentes, setDetallesComponentes] = useState({
     procesador: "",
     ram: "",
@@ -83,11 +89,6 @@ function FormularioActivo({
     setErrors({ ...errors, [id]: value.trim() === "" });
   };
 
-  // Función para manejar la selección del estado
-  const handleEstadoChange = (e) => {
-    setFormData({ ...formData, estado: e.target.value });
-    setErrors({ ...errors, estado: e.target.value.trim() === "" });
-  };
   function capitalizeFirstLetter(str) {
     if (!str) return ""; // Manejar cadenas vacías
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -227,6 +228,8 @@ function FormularioActivo({
           setErrorKey((prevKey) => prevKey + 1); // Ocultar el modal de éxito
         });
     } else {
+      console.log("Datos a enviar:", dataToSend);
+
       // Realizar la solicitud POST para guardar los datos en la base de datos
       axios
         .post("http://localhost:5000/registrarActivos", dataToSend)
@@ -344,6 +347,7 @@ function FormularioActivo({
       setSelectedModelo(activoTabla.id_modelo || "");
       setSelectedMarca(activoTabla.id_marca || "");
       setSelectedEncargado(activoTabla.id_laboratorista || "");
+      setSelectedEstado(activoTabla.estado || "");
 
       // Cargar opciones dinámicas para combobox anidados
       if (activoTabla.id_ubicacion) {
@@ -448,8 +452,6 @@ function FormularioActivo({
     const marcaId = e.target.value;
     setSelectedMarca(marcaId);
     formData.marca = marcaId;
-    console.log("Marca seleccionada:", marcaId);
-    console.log("Activo seleccionado:", selectedActivo);
 
     // Llamada a la API para obtener modelos relacionados con la marca
     axios
@@ -523,7 +525,7 @@ function FormularioActivo({
             Activo
           </label>
           <select
-            className={getInputClass("activo")}
+            className={`form-select ${getInputClass("activo")}`}
             value={selectedActivo}
             onChange={handleActivoChange}
             id="activo"
@@ -556,10 +558,11 @@ function FormularioActivo({
                 Marca
               </label>
               <select
-                className={getInputClass("marca")}
+                className={`form-select ${getInputClass("marca")}`}
                 value={selectedMarca}
                 onChange={handleMarcaChange}
                 id="marca"
+                disabled={esEdicion}
               >
                 <option value="">Seleccione una marca</option>
                 {marcas.map((marca) => (
@@ -582,7 +585,7 @@ function FormularioActivo({
                 Tipo de Activo
               </label>
               <select
-                className={getInputClass("tipoActivo")}
+                className={`form-select ${getInputClass("tipoActivo")}`}
                 id="tipoActivo"
                 value={capitalizeFirstLetter(formData.tipoActivo)}
                 onChange={handleChange}
@@ -591,6 +594,7 @@ function FormularioActivo({
                   borderRadius: "5px",
                   width: "100%",
                 }}
+                disabled={esEdicion}
               >
                 <option value="">Seleccione el tipo de activo</option>
                 <option value="Informático">Informático</option>
@@ -617,6 +621,7 @@ function FormularioActivo({
                 value={capitalizeFirstLetter(formData.procesoCompra)}
                 onChange={handleChange}
                 placeholder="Proceso de compra"
+                disabled={esEdicion}
               />
             </div>
             <div className="form-group">
@@ -631,7 +636,7 @@ function FormularioActivo({
                 Bloque
               </label>
               <select
-                className={getInputClass("bloque")}
+                className={`form-select ${getInputClass("bloque")}`}
                 value={selectedBloque}
                 onChange={handleBloqueChange}
                 id="bloque"
@@ -662,10 +667,11 @@ function FormularioActivo({
                 Modelo
               </label>
               <select
-                className={getInputClass("modelo")}
+                className={`form-select ${getInputClass("modelo")}`}
                 value={selectedModelo}
                 onChange={handleModeloChange}
                 id="modelo"
+                disabled={esEdicion}
               >
                 <option value="">Seleccione un modelo</option>
                 {modelos.map((modelo) => (
@@ -709,10 +715,11 @@ function FormularioActivo({
                 Proveedor
               </label>
               <select
-                className={getInputClass("proveedor")}
+                className={`form-select ${getInputClass("proveedor")}`}
                 value={selectedProveedor}
                 onChange={handleChangeProveedor}
                 id="proveedor"
+                disabled={esEdicion}
               >
                 <option value="">Seleccione un Proveedor</option>
                 {proveedores.map((proveedor) => (
@@ -739,7 +746,7 @@ function FormularioActivo({
               </label>
               <select
                 id="laboratorio"
-                className={getInputClass("laboratorio")}
+                className={`form-select ${getInputClass("laboratorio")}`}
                 value={selectedLaboratorio}
                 onChange={handleLaboratorioChange}
                 disabled={!selectedBloque} // Deshabilitar si no hay bloque seleccionado
@@ -769,48 +776,18 @@ function FormularioActivo({
             Estado
           </label>
           <div className="d-flex gap-5">
-            <div className="form-check">
-              <input
-                type="radio"
-                className="form-check-input"
-                id="nuevo"
-                name="nuevo"
-                value="Nuevo"
-                onChange={handleEstadoChange}
-                checked={formData.estado === "Nuevo"}
-              />
-              <label className="form-check-label" htmlFor="Nuevo">
-                Nuevo
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                type="radio"
-                className="form-check-input"
-                id="operando"
-                name="operando"
-                value="Operando"
-                onChange={handleEstadoChange}
-                checked={formData.estado === "Operando"}
-              />
-              <label className="form-check-label" htmlFor="operando">
-                Operando
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                type="radio"
-                className="form-check-input"
-                id="proceso_instalacion"
-                name="proceso_instalacion"
-                value="En proceso de instalación"
-                onChange={handleEstadoChange}
-                checked={formData.estado === "En proceso de instalación"}
-              />
-              <label className="form-check-label" htmlFor="proceso_instalacion">
-                En proceso de instalación
-              </label>
-            </div>
+            <select
+              id="estado"
+              className="form-select" // Cambia según tus clases personalizadas
+              value={selectedEstado}
+              onChange={handleEstadoChange}
+            >
+              <option value="">Seleccione un estado</option>
+              <option value="Funcional">Funcional</option>
+              <option value="Inactivo">Inactivo</option>
+              <option value="No funcional">No Funcional</option>
+              <option value="Dado de baja">Dado de baja</option>
+            </select>
           </div>
         </div>
 
@@ -904,13 +881,14 @@ function FormularioActivo({
               marginTop: "10px",
             }}
           >
-            Encargado
+            Encargado del Registro
           </label>
           <select
-            className={getInputClass("encargado")}
+            className={`form-select ${getInputClass("encargado")}`}
             value={selectedEncargado}
             onChange={handleChangeEncargado}
             id="encargado"
+            disabled={esEdicion}
           >
             <option value="">Seleccione un Encargado</option>
             {encargados.map((laboratorista) => (

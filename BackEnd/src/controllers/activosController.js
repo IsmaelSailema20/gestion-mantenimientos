@@ -7,7 +7,8 @@ module.exports.getActivosDisponibles = (req, res) => {
     a.numero_serie,
     a.tipo,
     a.estado ,
-    ta.nombre AS tipo_activo,
+    p.nombre AS proveedor,
+    ta.nombre AS clase,
     CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion,
     a.fecha_registro
 FROM 
@@ -21,6 +22,8 @@ JOIN
     edificios e ON el.id_edificio = e.id_edificio
 JOIN 
     laboratorios l ON el.id_laboratorio = l.id_laboratorio
+JOIN 
+	proveedores p on a.id_proveedor = p.id_proveedor
 WHERE 
     a.id_activo NOT IN (
         SELECT id_activo 

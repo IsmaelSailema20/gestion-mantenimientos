@@ -31,6 +31,11 @@ const { actividadesPorMantenimiento } = require("../controllers/actividadesPorMa
 const { finalizarmantenimientototal } = require("../controllers/finalizarmantenimientototal");
 const { getModelosInfo } = require('../controllers/modelosInfoController.js');
 
+//RUTAS PARA FILTROS
+const {ubicacionesParaFiltro} = require('../controllers/ubicacionesParaFiltro.js');
+const {proveedoresParaFiltro} = require('../controllers/proveedoresParaFiltros.js');
+const {claseParaFiltro}= require('../controllers/claseActivoParaFiltro.js');
+
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -60,6 +65,9 @@ router.post('/guardarcomponentes', guardarcomponentes);
 router.post('/actividadesPorMantenimiento', actividadesPorMantenimiento);
 router.get('/componentes', getComponentes);
 router.get('/modelos-info', getModelosInfo); // Necesario para registrar por lotes
+router.get('/ubicaciones-filtro', ubicacionesParaFiltro); //FILTRO DE UBICACIONES
+router.get('/proveedores-filtro', proveedoresParaFiltro); //FILTRO DE PROVEEDORES
+router.get('/clase-filtro', claseParaFiltro); //FILTRO DE PROVEEDORES
 
 module.exports = router;
 

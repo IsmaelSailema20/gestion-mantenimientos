@@ -18,6 +18,12 @@ const Home = () => {
   const [rol, setRol] = useState("");
   const [activoSeleccionado, setActivoSeleccionado] = useState(null); // Activo seleccionado para editar
   const [esEdicion, setEsEdicion] = useState(false); // Bandera para el modo edición o creación
+  const [terminoBusqueda, setTerminoBusqueda] = useState(""); // Término de búsqueda
+
+  // Filtrar activos dinámicamente
+  const activosFiltrados = activos.filter((activo) =>
+    activo.numero_serie.toLowerCase().includes(terminoBusqueda.toLowerCase())
+  );
 
   const cambiarAVista = (vista) => {
     setVistaActual(vista); // Cambia la vista actual
@@ -52,11 +58,13 @@ const Home = () => {
     window.location.reload();
   };
 
+  // Calcular activos a mostrar según la página actual
   const indiceInicial = (paginaActual - 1) * elementosPorPagina;
   const indiceFinal = indiceInicial + elementosPorPagina;
-  const activosPaginados = activos.slice(indiceInicial, indiceFinal);
+  const activosPaginados = activosFiltrados.slice(indiceInicial, indiceFinal);
 
-  const totalPaginas = Math.ceil(activos.length / elementosPorPagina);
+  // Total de páginas basado en activos filtrados
+  const totalPaginas = Math.ceil(activosFiltrados.length / elementosPorPagina);
 
   const handlePaginaSiguiente = () => {
     if (paginaActual < totalPaginas) {
@@ -168,7 +176,7 @@ const Home = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="container mt-4">
+      <div className="container mt-4 mb-4">
         {vistaActual === "inicio" && (
           <>
             <h1 className="mb-4">Bienvenido {username}</h1>
@@ -189,6 +197,44 @@ const Home = () => {
                 Registro por Lotes
               </button>
               <ExcelReader ref={excelReaderRef} />
+            </div>
+            <div
+              className="d-flex align-items-center mb-4"
+              style={{ position: "relative", width: "250px" }}
+            >
+              <input
+                type="text"
+                placeholder="Buscar Por Código"
+                style={{
+                  border: "5px solid #a32126",
+                  borderRadius: "20px",
+                  padding: "5px 25px",
+                  width: "250px",
+                }}
+                value={terminoBusqueda}
+                onChange={(e) => {
+                  setTerminoBusqueda(e.target.value);
+                  setPaginaActual(1); // Reiniciar a la primera página al buscar
+                }}
+                maxLength={20}
+              />
+              <button
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <img
+                  src="/lupa-de-busqueda.png"
+                  alt="Buscar"
+                  style={{ width: "20px", height: "20px" }}
+                />
+              </button>
             </div>
 
             {/* Modal para mostrar el formulario */}

@@ -10,6 +10,7 @@ module.exports.getActivos = (req, res) => {
     ta.nombre AS nombre_activo,
     a.tipo AS tipo_activo,
     a.estado,
+    DATE_FORMAT(a.fecha_registro, '%Y-%m-%d') AS fecha_registro,
     CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion,
     a.id_proveedor, 
     el.id_laboratorio,

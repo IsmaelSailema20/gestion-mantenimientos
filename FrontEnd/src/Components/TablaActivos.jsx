@@ -23,6 +23,7 @@ const TablaActivos = ({ activos, onEdit }) => {
             <th>Codigo</th>
             <th>Activo</th>
             <th>Tipo</th>
+            <th>Fecha De Registro</th>
             <th>Ubicación</th>
             <th>Estado</th>
             <th>Acciones</th>
@@ -35,6 +36,7 @@ const TablaActivos = ({ activos, onEdit }) => {
                 <td>{activo.numero_serie}</td>
                 <td>{activo.nombre_activo}</td>
                 <td>{capitalizeFirstLetter(activo.tipo_activo)}</td>
+                <td>{activo.fecha_registro}</td>
                 <td>{activo.ubicacion}</td>
                 <td>{capitalizeFirstLetter(activo.estado)}</td>
                 <td className="text-center" style={{ padding: 0 }}>
@@ -64,7 +66,7 @@ const TablaActivos = ({ activos, onEdit }) => {
             ))
           ) : (
             <tr style={{ height: "60px" }}>
-              <td colSpan="6" className="text-center">
+              <td colSpan="7" className="text-center">
                 No hay datos disponibles
               </td>
             </tr>
