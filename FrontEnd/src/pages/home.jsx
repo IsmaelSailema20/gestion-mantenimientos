@@ -13,7 +13,7 @@ const Home = () => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para mostrar el formulario
   const [activos, setActivos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
-  const elementosPorPagina = 7; // Número de elementos por página
+  const elementosPorPagina = 6; // Número de elementos por página
   const [username, setUsername] = useState("");
   const [rol, setRol] = useState("");
   const [activoSeleccionado, setActivoSeleccionado] = useState(null); // Activo seleccionado para editar
