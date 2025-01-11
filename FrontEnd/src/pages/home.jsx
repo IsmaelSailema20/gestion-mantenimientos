@@ -133,9 +133,10 @@ const Home = () => {
         style={{
           backgroundColor: "rgb(163, 33, 38)",
           color: "white",
-          height: "100px",
+          height: "60px", // Reducir altura
+          padding: "10px 20px", // Ajustar padding
         }}
-        className="d-flex justify-content-between align-items-center px-4 py-2"
+        className="d-flex justify-content-between align-items-center"
       >
       <div className="d-flex align-items-center gap-3">
         {/* Botón Activos/Mantenimientos */}
@@ -178,8 +179,8 @@ const Home = () => {
               color:
                 rol === "admin" || rol === "laboratorista" ? "black" : "white",
               borderRadius: "35px",
-              fontSize: "20px",
-              padding: "10px 20px",
+              fontSize: "18px", // Reducir tamaño de texto
+              padding: "5px 15px", // Reducir padding
               fontWeight: "bold",
               cursor: rol === "admin" ? "pointer" : "not-allowed",
               opacity: rol === "admin" ? 1 : 0.6,
@@ -204,7 +205,7 @@ const Home = () => {
             <img
               src="/SESION CERR.png"
               alt="Cerrar Sesión"
-              style={{ width: "50px", height: "50px", marginRight: "8px" }}
+              style={{ width: "40px", height: "40px", marginRight: "8px" }} // Reducir tamaño de icono
             />
             Cerrar Sesión
           </button>
@@ -212,12 +213,12 @@ const Home = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="container mt-4 mb-4">
+      <div className="container mt-3 mb-3"> {/* Reducir márgenes */}
         {vistaActual === "inicio" && (
           <>
-            <h1 className="mb-4">Bienvenido {username}</h1>
+            <h1 className="mb-3" style={{ fontSize: "24px" }}>Bienvenido {username}</h1>
 
-            <div className="mb-3 d-flex gap-3">
+            <div className="mb-3 d-flex gap-2"> {/* Reducir espacio entre botones */}
               <button
                 className="btn"
                 style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
@@ -235,17 +236,17 @@ const Home = () => {
               <ExcelReader ref={excelReaderRef} />
             </div>
             <div
-              className="d-flex align-items-center mb-4"
-              style={{ position: "relative", width: "250px" }}
+              className="d-flex align-items-center mb-3"
+              style={{ position: "relative", width: "220px" }} // Reducir ancho del campo de búsqueda
             >
               <input
                 type="text"
                 placeholder="Buscar Por Código"
                 style={{
-                  border: "5px solid #a32126",
-                  borderRadius: "20px",
-                  padding: "5px 25px",
-                  width: "250px",
+                  border: "4px solid #a32126", // Reducir grosor del borde
+                  borderRadius: "15px", // Reducir bordes redondeados
+                  padding: "5px 15px", // Reducir padding
+                  width: "220px", // Reducir ancho
                 }}
                 value={terminoBusqueda}
                 onChange={(e) => {
@@ -268,7 +269,7 @@ const Home = () => {
                 <img
                   src="/lupa-de-busqueda.png"
                   alt="Buscar"
-                  style={{ width: "20px", height: "20px" }}
+                  style={{ width: "18px", height: "18px" }} // Reducir tamaño del icono
                 />
               </button>
             </div>
@@ -283,7 +284,7 @@ const Home = () => {
               >
                 <div
                   className="modal-dialog"
-                  style={{ maxWidth: "600px", maxHeight: "500px" }}
+                  style={{ maxWidth: "500px" }} // Reducir ancho del modal
                 >
                   <div className="modal-content">
                     <div className="modal-body">
@@ -309,8 +310,8 @@ const Home = () => {
 
             {/* Controles de paginación */}
             <div
-              className="d-flex justify-content-between mt-4"
-              style={{ gap: "20px" }}
+              className="d-flex justify-content-between mt-3"
+              style={{ gap: "15px" }} // Reducir espacio entre botones
             >
               <button
                 className="btn"

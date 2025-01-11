@@ -59,7 +59,7 @@ GROUP BY
     m.observaciones, 
     activos_agrupados.detalle
 ORDER BY 
-    m.id_mantenimiento ASC;
+    m.id_mantenimiento DESC;
 
   `;
 
