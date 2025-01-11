@@ -137,29 +137,65 @@ const Home = () => {
         }}
         className="d-flex justify-content-between align-items-center px-4 py-2"
       >
-        <div className="d-flex align-items-center">
+      <div className="d-flex align-items-center gap-3">
+        {/* Botón Activos/Mantenimientos */}
+        <button
+          onClick={() =>
+            vistaActual === "inicio"
+              ? cambiarAVista("mantenimientos")
+              : cambiarAVista("inicio")
+          }
+          className="btn"
+          style={{
+            backgroundColor:
+              rol === "admin"
+                ? "white"
+                : rol === "laboratorista"
+                ? "white"
+                : "black",
+            color:
+              rol === "admin" || rol === "laboratorista" ? "black" : "white",
+            borderRadius: "35px",
+            fontSize: "20px",
+            padding: "10px 20px",
+            fontWeight: "bold",
+          }}
+        >
+          {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
+        </button>
+
+        {/* Botón Reportes de Gestión */}
+        {vistaActual === "mantenimientos" && (
           <button
-            onClick={() =>
-              vistaActual === "inicio"
-                ? cambiarAVista("mantenimientos")
-                : cambiarAVista("inicio")
-            }
             className="btn"
             style={{
-              backgroundColor: rol === "admin" ? "white" : "gray", // Color gris para laboratorista
-              color: rol === "admin" ? "black" : "white", // Texto gris si es laboratorista
-              cursor: rol === "admin" ? "pointer" : "not-allowed",
+              backgroundColor:
+                rol === "admin"
+                  ? "white"
+                  : rol === "laboratorista"
+                  ? "white"
+                  : "black",
+              color:
+                rol === "admin" || rol === "laboratorista" ? "black" : "white",
               borderRadius: "35px",
               fontSize: "20px",
               padding: "10px 20px",
               fontWeight: "bold",
-              whiteSpace: "nowrap", // Cursor para indicar deshabilitado
+              cursor: rol === "admin" ? "pointer" : "not-allowed",
+              opacity: rol === "admin" ? 1 : 0.6,
+              pointerEvents: rol === "admin" ? "auto" : "none", // Deshabilita interacción
             }}
-            disabled={rol !== "admin"} // Desactivar el botón si no es admin
+            onClick={() => {
+              if (rol === "admin") {
+                console.log("Generando Reportes de Gestión");
+              }
+            }}
+            disabled={rol !== "admin"} // Deshabilitado si no es admin
           >
-            {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
+            Reportes de Gestión
           </button>
-        </div>
+        )}
+      </div>
         <div className="d-flex align-items-center">
           <button
             className="btn text-white d-flex align-items-center"
