@@ -5,6 +5,7 @@ import FormularioMantenimiento from "../Components/FormularioMantenimiento";
 import { useNavigate } from "react-router-dom"; // Importa el hook useNavigate
 
 const MantenimientosPrincipal = ({ onEdit }) => {
+  const [rol, setRol] = useState("");
   const [mantenimientos, setMantenimientos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,6 +115,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
 
   return (
     <div className="container">
+
       {/* Controles superiores */}
       <div className="mb-3">
         <button
@@ -453,6 +455,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
         )}
       </div>
     </div>
+
   );
 };
 MantenimientosPrincipal.propTypes = {
