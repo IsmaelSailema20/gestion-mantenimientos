@@ -91,12 +91,9 @@ function AgregarActividad({
       }, 3000);
       return;
     }
-
-    // Verificación específica para "Cambio de Componentes"
     if (actividadSeleccionadaNombre === "Cambio de componentes") {
-      const todosSonCPU = activosSeleccionados.every(
-        (activo) => activo.tipo_activo === "CPU"
-      );
+      const todosSonCPU = activosSeleccionados.tipo_activo === "CPU"
+      ;
 
       if (!todosSonCPU) {
         setModalDataError({
@@ -132,14 +129,11 @@ function AgregarActividad({
     }
 
     try {
-      console.log("Datos enviados al backend:", {
-        idActivos: activosSeleccionados.map((activo) => activo.id_activo), // Extrae solo los IDs
-        idActividad: actividadSeleccionada,
-      });
+     
       const response = await axios.post(
         "http://localhost:5000/insertarActividad",
         {
-          idActivos: activosSeleccionados.map((activo) => activo.id_activo),
+          idActivos: activosSeleccionados,
           idActividad: actividadSeleccionada,
           idMantenimiento: idMantenimiento,
         }
@@ -158,7 +152,6 @@ function AgregarActividad({
         setTimeout(() => {
           setShowModal(false);
           closeModal();
-          window.location.reload();
         }, 3000);
       } else {
         setModalDataError({
