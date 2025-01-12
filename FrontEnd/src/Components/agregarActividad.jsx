@@ -13,7 +13,13 @@ function AgregarActividad({
   const [actividadSeleccionada, setActividadSeleccionada] = useState("");
   const [actividadSeleccionadaNombre, setActividadSeleccionadaNombre] =
     useState("");
-
+  const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState([]);
+  const [componentes, setComponentes] = useState([]);
+  const [componentesSeleccionados, setComponentesSeleccionados] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(""); // Almacena la categoría seleccionada
+  const [datosComponentes, setDatosComponentes] = useState({}); // Almacena el JSON completo de la API
+  const [categorias, setCategorias] = useState([]);
+  const [showComp, setshowComp] =  useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulariosActivos, setFormulariosActivos] = useState([]);
   const [error, setError] = useState("");
@@ -26,8 +32,6 @@ function AgregarActividad({
   });
 
   useEffect(() => {
-    // Consultar actividades disponibles
-    console.log(activosSeleccionados);
     const cargarActividades = async () => {
       try {
         const response = await axios.get(
@@ -67,13 +71,15 @@ function AgregarActividad({
   };
 
   const handleAgregarActividad = async () => {
+
+    console.log(componentesSeleccionados);
+
     setError("");
 
-    // Validaciones iniciales
-    if (!actividadSeleccionada) {
+    if (!actividadesSeleccionadas || actividadesSeleccionadas.length === 0) {
       setModalDataError({
         titulo: "Error de Validación",
-        mensaje: "Debe seleccionar una actividad",
+        mensaje: "Debe seleccionar al menos una actividad.",
       });
       setShowModalError(true);
       setTimeout(() => {
@@ -82,66 +88,33 @@ function AgregarActividad({
       return;
     }
 
-    if (!activosSeleccionados || activosSeleccionados.length === 0) {
-      setModalDataError({
-        titulo: "Error de Validación",
-        mensaje: "Debe seleccionar al menos un activo.",
-      });
-      setShowModalError(true);
-      setTimeout(() => {
-        setShowModalError(false);
-      }, 3000);
-      return;
-    }
-
-    if (actividadSeleccionadaNombre === "Cambio de componentes") {
-      const todosSonCPU = activosSeleccionados.tipo_activo === "CPU";
-      if (!todosSonCPU) {
-        setModalDataError({
-          titulo: "Error de Validación",
-          mensaje:
-            "Para seleccionar 'Cambio de Componentes', todos los activos deben ser de tipo CPU.",
+    if (showComp === "Cambio de componentes") {
+      try {
+        await axios.post("http://localhost:5000/guardarcomponentes", {
+          idActivo: activosSeleccionados.id_activo,
+          nuevosComponentes: componentesSeleccionados,
+          idMantenimiento: idMantenimiento,
         });
-        setShowModalError(true);
-        setTimeout(() => {
-          setShowModalError(false);
-        }, 3000);
-        return;
+      
+      } catch (error) {
+        console.error("Error al guardar componentes:", error);
+        alert("Hubo un error al guardar los componentes.");
       }
-
-      // Obtener componentes actuales para cada activo
-      const formularios = await Promise.all(
-        activosSeleccionados.map(async (activo) => {
-          const componentesActuales = await obtenerComponentesActuales(
-            activo.id_activo
-          );
-          return {
-            idActivo: activo.id_activo,
-            componentesActuales,
-            nuevosComponentes: {},
-          };
-        })
-      );
-
-      setFormulariosActivos(formularios);
-      setMostrarFormulario(true);
-
-      return;
     }
 
     try {
       const response = await axios.post(
         "http://localhost:5000/insertarActividad",
         {
-          idActivos: activosSeleccionados,
-          idActividad: actividadSeleccionada,
+          idActivos: activosSeleccionados.id_activo,
+          idActividad: actividadesSeleccionadas,
           idMantenimiento: idMantenimiento,
         }
       );
-
+      console.log(response.data.message);
       if (
         response.data.message ===
-        "Las actividades se agregaron con éxito a los activos."
+        "Las actividades se agregaron con éxito al activo."
       ) {
         setModalData({
           titulo: "Actividad Agregada",
@@ -169,88 +142,133 @@ function AgregarActividad({
       setError("Error al agregar la actividad.");
     }
   };
+
   const handleEliminarActividad = (actividadId) => {
-    setActividadesSeleccionadas((prevState) =>
-      prevState.filter((actividad) => actividad.id !== actividadId)
+    const actividad = actividadesSeleccionadas.find(
+      (act) => act.id === actividadId
     );
-  };
-  const handleChangeComponent = (e, idActivo, tipoComponente) => {
-    setFormulariosActivos((prev) =>
-      prev.map((form) =>
-        form.idActivo === idActivo
-          ? {
-              ...form,
-              nuevosComponentes: {
-                ...form.nuevosComponentes,
-                [tipoComponente]: e.target.value,
-              },
-            }
-          : form
-      )
-    );
-  };
+  
 
-  const handleSubmitFormularios = async () => {
-    setMostrarFormulario(false);
-    try {
-      console.log("Datos enviados al backend:", {
-        idActivos: activosSeleccionados.map((activo) => activo.id_activo), // Extrae solo los IDs
-        idActividad: actividadSeleccionada,
-      });
-      const response = await axios.post(
-        "http://localhost:5000/insertarActividad",
-        {
-          idActivos: activosSeleccionados.map((activo) => activo.id_activo),
-          idActividad: actividadSeleccionada,
-          idMantenimiento: idMantenimiento,
-        }
+    if (actividad) {
+      setActividadesSeleccionadas((prev) =>
+        prev.filter((act) => act.id !== actividadId)
       );
-
-      if (
-        response.data.message ===
-        "Las actividades se agregaron con éxito a los activos."
-      ) {
-        setModalData({
-          titulo: "Actividad Agregada",
-          mensaje: "La actividad se agregó con éxito.",
-        });
-        setShowModal(true);
-
-        setTimeout(() => {
-          setShowModal(false);
-          closeModal();
-          window.location.reload();
-        }, 3000);
-      } else {
-        setModalDataError({
-          titulo: "Error al agregar la actividad",
-          mensaje: "No se pudo agregar la actividad.",
-        });
-        setShowModalError(true);
-        setTimeout(() => {
-          setShowModalError(false);
-          closeModal();
-        }, 3000);
+      setActividades((prev) => [...prev, actividad]);
+      if (actividad?.nombre === "Cambio de componentes") {
+        setshowComp("");
+        setComponentesSeleccionados([]);
       }
-    } catch (err) {
-      console.error("Error al agregar actividad:", err);
-      setError("Error al agregar la actividad.");
+      console.log("Actividad eliminada del recuadro:", actividad);
+      console.log("Actividades disponibles actualizadas:", actividades);
     }
   };
 
-  const handleGuardar = (data) => {
-    console.log("Componentes guardados:", data);
-    // Aquí puedes enviar los datos a la API o realizar otra acción
+  const handleSeleccionarActividad = async (e) => {
+    const actividadId = e.target.value;
+    const selectedActividad = actividades.find(
+      (actividad) => actividad.id.toString() === actividadId
+    );
+    setActividadSeleccionada(actividadId);
+    setActividadSeleccionadaNombre(selectedActividad?.nombre || "");
+
+    if (!actividadId) {
+      console.log("No se seleccionó ninguna actividad");
+      return;
+    }
+
+    console.log("ID seleccionado:", actividadId);
+    console.log("Actividad seleccionada:", selectedActividad);
+
+    if (selectedActividad) {
+      setActividadesSeleccionadas((prev) => [...prev, selectedActividad]);
+      setActividades((prev) =>
+        prev.filter((act) => act.id !== selectedActividad.id)
+      );
+    }
+
+    if (selectedActividad?.nombre === "Cambio de componentes") {
+      try {
+        const response = await axios.get("http://localhost:5000/componentes");
+        console.log("Respuesta de la API:", response.data);
+        console.log(response);
+        setshowComp("Cambio de componentes")
+        setDatosComponentes(response.data); 
+        const categoriasDisponibles = Object.keys(response.data);
+        setCategorias(categoriasDisponibles); 
+
+       
+        const procesadores = response.data.procesadores || [];
+        setComponentes(procesadores);
+      } catch (error) {
+        console.error("Error al cargar componentes:", error);
+        setComponentes([]); // Manejo de errores
+      }
+    }
+  };
+
+  const handleSeleccionarComponente = (e) => {
+    const componenteId = e.target.value;
+    const componente = componentes.find(
+      (comp) => comp.id === Number(componenteId)
+    );
+
+    if (componente) {
+      setComponentesSeleccionados((prev) => [...prev, componente]);
+      setComponentes((prev) =>
+        prev.filter((comp) => comp.id !== Number(componenteId))
+      );
+      console.log("Componente seleccionado:", componente);
+      console.log("Componentes restantes:", componentes);
+    }
+  };
+
+  const handleEliminarComponente = (componenteId) => {
+    const componente = componentesSeleccionados.find(
+      (comp) => comp.id === componenteId
+    );
+    if (componente) {
+      setComponentesSeleccionados((prev) =>
+        prev.filter((comp) => comp.id !== componenteId)
+      );
+      setComponentes((prev) => [...prev, componente]);
+    }
+  };
+  const handleCategoriaChange = (e) => {
+    const categoria = e.target.value; // Obtiene la categoría seleccionada
+    setCategoriaSeleccionada(categoria); // Actualiza la categoría seleccionada
+
+    // Filtra los componentes de la categoría seleccionada
+    const componentesCategoria = datosComponentes[categoria] || [];
+    setComponentes(componentesCategoria); // Actualiza los componentes a mostrar
+  };
+  const handleComponenteSelect = (e) => {
+    const { value } = e.target;
+    const categoria = categoriaSeleccionada;
+
+    // Verificar si ya se seleccionó un componente de esta categoría
+    if (
+      componentesSeleccionados[categoria] &&
+      componentesSeleccionados[categoria] !== value
+    ) {
+      alert(`Solo puedes seleccionar un componente por categoría.`);
+      return;
+    }
+
+    // Actualizar el estado de componentes seleccionados por categoría
+    setComponentesSeleccionados((prevState) => ({
+      ...prevState,
+      [categoria]: value,
+    }));
   };
   return (
     <div
       style={{
-        justifyContent: "center", // Centra horizontalmente
-        marginTop: "10px", // Espaciado adicional si lo necesitas
+        justifyContent: "center",
+        marginTop: "10px",
         display: "flex",
-        flexDirection: "column", // Organiza los elementos en columna
-        alignItems: "center", // Centra el contenido horizontalmente
-        position: "relative", // Necesario para posicionar el botón en la esquina
+        flexDirection: "column",
+        alignItems: "center",
+        position: "relative",
       }}
     >
       <h4
@@ -274,7 +292,7 @@ function AgregarActividad({
           top: "10px",
           right: "10px",
         }}
-        onClick={() => console.log("Modal cerrado")}
+        onClick={closeModal}
       >
         &times;
       </span>
@@ -282,7 +300,6 @@ function AgregarActividad({
       <div
         style={{
           marginTop: "20px",
-          marginLeft: "65px",
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
@@ -303,7 +320,6 @@ function AgregarActividad({
         </p>
       </div>
 
-      {/* Colocando el select a la izquierda */}
       <div
         style={{
           marginTop: "20px",
@@ -315,8 +331,7 @@ function AgregarActividad({
       >
         <select
           id="actividad"
-          value={actividadSeleccionada}
-          onChange={(e) => setActividadSeleccionada(e.target.value)}
+          onChange={handleSeleccionarActividad}
           style={{ padding: "8px", fontSize: "1rem" }}
         >
           <option value="">Seleccione una actividad</option>
@@ -327,7 +342,6 @@ function AgregarActividad({
           ))}
         </select>
 
-        {/* Recuadro para mostrar las actividades seleccionadas */}
         <div
           style={{
             marginLeft: "20px",
@@ -335,44 +349,157 @@ function AgregarActividad({
             border: "1px solid #ccc",
             borderRadius: "4px",
             minWidth: "300px",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            justifyContent: "flex-start",
+            maxHeight: "200px", // Altura máxima para habilitar el scroll
+            overflowY: "auto", // Habilitar el scroll vertical
           }}
         >
           {actividadesSeleccionadas.length === 0 ? (
-            <span>Selecciona actividades</span>
+            <span>Actividades Seleccionadas</span>
           ) : (
-            actividadesSeleccionadas.map((actividad) => (
-              <div
-                key={actividad.id}
-                style={{
-                  backgroundColor: "#f0f0f0",
-                  padding: "5px 10px",
-                  borderRadius: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                {actividad.nombre}
-                <span
-                  onClick={() => handleEliminarActividad(actividad.id)}
-                  style={{
-                    cursor: "pointer",
-                    marginLeft: "8px",
-                    color: "red",
-                    fontWeight: "bold",
-                  }}
-                >
-                  &times;
-                </span>
-              </div>
-            ))
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th
+                    style={{
+                      borderBottom: "1px solid #ccc",
+                      textAlign: "left",
+                      padding: "5px",
+                    }}
+                  >
+                    Actividades
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {actividadesSeleccionadas.map((actividad) => (
+                  <tr key={actividad.id}>
+                    <td
+                      style={{ padding: "5px", borderBottom: "1px solid #eee" }}
+                    >
+                      {actividad.nombre}
+                    </td>
+                    <td
+                      style={{ padding: "5px", borderBottom: "1px solid #eee" }}
+                    >
+                      <span
+                        onClick={() => handleEliminarActividad(actividad.id)}
+                        style={{
+                          cursor: "pointer",
+                          color: "red",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        &times;
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
+      {showComp === "Cambio de componentes" && (
+        <div
+          style={{
+            marginTop: "20px",
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <select
+            onChange={handleCategoriaChange}
+            value={categoriaSeleccionada}
+          >
+            <option value="">Seleccione una categoría</option>
+            {categorias.map((categoria) => (
+              <option key={categoria} value={categoria}>
+                {categoria.charAt(0).toUpperCase() + categoria.slice(1)}{" "}
+                {/* Capitaliza la primera letra */}
+              </option>
+            ))}
+          </select>
+          <select
+            id="componentes"
+            onChange={handleSeleccionarComponente}
+            style={{ padding: "8px", fontSize: "1rem" }}
+          >
+            <option value="">Seleccione un componente</option>
+            {componentes.map((componente) => (
+              <option key={componente.id} value={componente.id}>
+                {componente.label}
+              </option>
+            ))}
+          </select>
 
+          <div
+            style={{
+              marginLeft: "20px",
+              padding: "8px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              minWidth: "300px",
+              maxHeight: "200px", // Altura máxima para habilitar el scroll
+              overflowY: "auto", // Habilitar el scroll vertical
+            }}
+          >
+            {componentesSeleccionados.length === 0 ? (
+              <span>Componentes Seleccionados</span>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        borderBottom: "1px solid #ccc",
+                        textAlign: "left",
+                        padding: "5px",
+                      }}
+                    >
+                      Componentes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {componentesSeleccionados.map((componente) => (
+                    <tr key={componente.id}>
+                      <td
+                        style={{
+                          padding: "5px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        {componente.label}
+                      </td>
+                      <td
+                        style={{
+                          padding: "5px",
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <span
+                          onClick={() =>
+                            handleEliminarComponente(componente.id)
+                          }
+                          style={{
+                            cursor: "pointer",
+                            color: "red",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          &times;
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
       <button
         onClick={handleAgregarActividad}
         style={{
@@ -386,10 +513,23 @@ function AgregarActividad({
           marginBottom: "20px", // Ajusta el espaciado en la parte inferior si es necesario
         }}
       >
-        Agregar Actividad
+        Agregar Actividades
       </button>
-
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {showModal && (
+        <SuccessModal
+          titulo={modalData.titulo}
+          mensaje={modalData.mensaje}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      {showModalError && (
+        <ErrorModal
+          titulo={modalDataError.titulo}
+          mensaje={modalDataError.mensaje}
+          onClose={() => setShowModalError(false)}
+        />
+      )}
     </div>
   );
 }

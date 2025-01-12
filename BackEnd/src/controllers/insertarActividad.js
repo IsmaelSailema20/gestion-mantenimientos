@@ -1,27 +1,28 @@
 const connection = require('../models/db');
 
 module.exports.insertarActividad = (req, res) => {
-    const { idActivos, idActividad, idMantenimiento } = req.body;
+    const { idActivos, idMantenimiento, idActividad } = req.body;
 
-    if (!idActivos ) {
-        return res.status(400).json({ error: "Se requieren los IDs de los activos y el ID de la actividad." });
+    if (!idActivos || !idMantenimiento || !idActividad || !Array.isArray(idActividad)) {
+        return res.status(400).json({
+            error: "Se requieren el ID del activo, el ID del mantenimiento y una lista de actividades.",
+        });
     }
 
-    // Consulta para obtener el id_detalle_mantenimiento desde la tabla detalle_mantenimiento
     const queryDetalleMantenimiento = `
         SELECT id_detalle_mantenimiento
         FROM detalle_mantenimiento
-        WHERE id_activo IN (?) AND id_mantenimiento = ?
+        WHERE id_activo = ? AND id_mantenimiento = ?
     `;
 
-    // Usar una transacción para garantizar consistencia
+    // Iniciar la transacción
     connection.beginTransaction((err) => {
         if (err) {
             console.error("Error al iniciar transacción:", err);
             return res.status(500).json({ error: "Error al iniciar la transacción." });
         }
 
-        // Paso 1: Obtener los id_detalle_mantenimiento
+        // Paso 1: Obtener el id_detalle_mantenimiento
         connection.query(queryDetalleMantenimiento, [idActivos, idMantenimiento], (err, results) => {
             if (err) {
                 console.error("Error al obtener id_detalle_mantenimiento:", err);
@@ -32,28 +33,32 @@ module.exports.insertarActividad = (req, res) => {
 
             if (results.length === 0) {
                 return connection.rollback(() => {
-                    res.status(400).json({ error: "No se encontraron detalles de mantenimiento para los activos y el mantenimiento especificado." +" "+idActivos+" "+idMantenimiento});
+                    res.status(400).json({
+                        error: "No se encontraron detalles de mantenimiento para el activo y mantenimiento especificado.",
+                    });
                 });
             }
 
-            // Paso 2: Insertar las actividades para cada id_detalle_mantenimiento
-            const promises = results.map((detalle) => {
+            const idDetalleMantenimiento = results[0].id_detalle_mantenimiento;
+            const promises = idActividad.map((actividad) => {
                 return new Promise((resolve, reject) => {
                     const queryInsertarActividad = `
-                        INSERT INTO actividades_mantenimiento (id_detalle_mantenimiento, tipo_actividad)
+                        INSERT INTO actividades_mantenimiento (id_detalle_mantenimiento, tipo_actividad )
                         VALUES (?, ?)
                     `;
-                    connection.query(queryInsertarActividad, [detalle.id_detalle_mantenimiento, idActividad], (err, results) => {
-                        if (err) {
-                            console.error("Error al insertar actividad:", err);
-                            return reject(err);
+                    connection.query(
+                        queryInsertarActividad,
+                        [idDetalleMantenimiento, actividad.id],
+                        (err, results) => {
+                            if (err) {
+                                console.error("Error al insertar actividad:", err);
+                                return reject(err);
+                            }
+                            resolve(results);
                         }
-                        resolve(results);
-                    });
+                    );
                 });
             });
-
-            // Paso 3: Confirmar la transacción
             Promise.all(promises)
                 .then(() => {
                     connection.commit((err) => {
@@ -61,7 +66,7 @@ module.exports.insertarActividad = (req, res) => {
                             console.error("Error al confirmar transacción:", err);
                             return res.status(500).json({ error: "Error al confirmar la transacción." });
                         }
-                        res.status(200).json({ message: "Las actividades se agregaron con éxito a los activos." });
+                        res.status(200).json({ message: "Las actividades se agregaron con éxito al activo." });
                     });
                 })
                 .catch((error) => {
