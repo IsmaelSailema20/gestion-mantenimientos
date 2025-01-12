@@ -13,13 +13,15 @@ function AgregarActividad({
   const [actividadSeleccionada, setActividadSeleccionada] = useState("");
   const [actividadSeleccionadaNombre, setActividadSeleccionadaNombre] =
     useState("");
+  const [conteoCategorias, setConteoCategorias] = useState({});
+
   const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState([]);
   const [componentes, setComponentes] = useState([]);
   const [componentesSeleccionados, setComponentesSeleccionados] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(""); // Almacena la categoría seleccionada
   const [datosComponentes, setDatosComponentes] = useState({}); // Almacena el JSON completo de la API
   const [categorias, setCategorias] = useState([]);
-  const [showComp, setshowComp] =  useState("");
+  const [showComp, setshowComp] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulariosActivos, setFormulariosActivos] = useState([]);
   const [error, setError] = useState("");
@@ -37,15 +39,76 @@ function AgregarActividad({
         const response = await axios.get(
           "http://localhost:5000/consultarActividades"
         );
-        setActividades(response.data);
+        const actividadesDisponibles = response.data;
+  
+        const responseAnteriores = await axios.post(
+          "http://localhost:5000/actividadesRealizadas",
+          {
+            id: activosSeleccionados.detalle_mantenimiento,
+          }
+        );
+        const actividadesPrevias = responseAnteriores.data;
+  
+        const tieneCambioDeComponentes = actividadesPrevias.some(
+          (actividad) => actividad.nombre === "Cambio de componentes"
+        );
+  
+        setActividadesSeleccionadas(actividadesPrevias);
+  
+        const actividadesFiltradas = actividadesDisponibles.filter(
+          (actividad) =>
+            !actividadesPrevias.some((previa) => previa.id === actividad.id)
+        );
+        setActividades(actividadesFiltradas);
+  
+        if (tieneCambioDeComponentes) {
+          await cargarComponentes(); // Cargar componentes
+        }
+  
+        console.log("Actividades disponibles:", actividadesFiltradas);
+        console.log("Actividades realizadas:", actividadesPrevias);
       } catch (err) {
         console.error("Error al cargar actividades:", err);
         setError("Error al cargar actividades");
       }
     };
-
+  
+    const cargarComponentes = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/componentesSeleccionados",
+          {
+            id: activosSeleccionados.detalle_mantenimiento,
+          }
+        );
+        const componentesGuardados = response.data;
+        setComponentesSeleccionados(componentesGuardados);
+  
+        const cmptotal = await axios.get("http://localhost:5000/componentes");
+        const datosComponentes = cmptotal.data;
+        setDatosComponentes(datosComponentes);
+        setshowComp("Cambio de componentes");
+  
+        // Simular selección de componentes
+        componentesGuardados.forEach((componenteGuardado) => {
+          handleSeleccionarComponente({
+            target: { value: componenteGuardado.id.toString() },
+          });
+        });
+  
+        const categoriasDisponibles = Object.keys(datosComponentes);
+        setCategorias(categoriasDisponibles);
+  
+        console.log("Componentes cargados:", datosComponentes);
+      } catch (err) {
+        console.error("Error al cargar componentes:", err);
+        setError("Error al cargar componentes");
+      }
+    };
+  
     cargarActividades();
-  }, []);
+  }, [activosSeleccionados]);
+  
 
   const resetModalStates = () => {
     setShowModal(false);
@@ -71,7 +134,6 @@ function AgregarActividad({
   };
 
   const handleAgregarActividad = async () => {
-
     console.log(componentesSeleccionados);
 
     setError("");
@@ -95,7 +157,6 @@ function AgregarActividad({
           nuevosComponentes: componentesSeleccionados,
           idMantenimiento: idMantenimiento,
         });
-      
       } catch (error) {
         console.error("Error al guardar componentes:", error);
         alert("Hubo un error al guardar los componentes.");
@@ -147,7 +208,6 @@ function AgregarActividad({
     const actividad = actividadesSeleccionadas.find(
       (act) => act.id === actividadId
     );
-  
 
     if (actividad) {
       setActividadesSeleccionadas((prev) =>
@@ -191,17 +251,16 @@ function AgregarActividad({
         const response = await axios.get("http://localhost:5000/componentes");
         console.log("Respuesta de la API:", response.data);
         console.log(response);
-        setshowComp("Cambio de componentes")
-        setDatosComponentes(response.data); 
+        setshowComp("Cambio de componentes");
+        setDatosComponentes(response.data);
         const categoriasDisponibles = Object.keys(response.data);
-        setCategorias(categoriasDisponibles); 
+        setCategorias(categoriasDisponibles);
 
-       
-        const procesadores = response.data.procesadores || [];
-        setComponentes(procesadores);
+        //  const procesadores = response.data.procesadores || [];
+        //setComponentes(procesadores);
       } catch (error) {
         console.error("Error al cargar componentes:", error);
-        setComponentes([]); // Manejo de errores
+        setComponentes([]);
       }
     }
   };
@@ -213,6 +272,23 @@ function AgregarActividad({
     );
 
     if (componente) {
+      const categoriaSeleccionadaa = categoriaSeleccionada; // Ya tienes esta categoría en tu estado
+      const conteoActual = conteoCategorias[categoriaSeleccionadaa] || 0;
+      if (conteoActual >= 1) {
+        setModalDataError({
+          titulo: "Componente Duplicado",
+          mensaje: `Ya has seleccionado un componente de la categoría "${categoriaSeleccionadaa}".`,
+        });
+        setShowModalError(true);
+        setTimeout(() => {
+          setShowModalError(false);
+        }, 3000);
+        return;
+      }
+      setConteoCategorias((prev) => ({
+        ...prev,
+        [categoriaSeleccionadaa]: conteoActual + 1,
+      }));
       setComponentesSeleccionados((prev) => [...prev, componente]);
       setComponentes((prev) =>
         prev.filter((comp) => comp.id !== Number(componenteId))
@@ -227,6 +303,11 @@ function AgregarActividad({
       (comp) => comp.id === componenteId
     );
     if (componente) {
+      const categoria = categoriaSeleccionada;
+      setConteoCategorias((prev) => ({
+        ...prev,
+        [categoria]: (prev[categoria] || 1) - 1,
+      }));
       setComponentesSeleccionados((prev) =>
         prev.filter((comp) => comp.id !== componenteId)
       );
@@ -332,16 +413,21 @@ function AgregarActividad({
         <select
           id="actividad"
           onChange={handleSeleccionarActividad}
+          value={actividadSeleccionada}
           style={{ padding: "8px", fontSize: "1rem" }}
         >
           <option value="">Seleccione una actividad</option>
-          {actividades.map((actividad) => (
-            <option key={actividad.id} value={actividad.id}>
-              {actividad.nombre}
-            </option>
-          ))}
+          {actividades
+            .filter(
+              (actividad) =>
+                !actividadesSeleccionadas.some((sel) => sel.id === actividad.id)
+            ) // Excluir actividades seleccionadas del select
+            .map((actividad) => (
+              <option key={actividad.id} value={actividad.id}>
+                {actividad.nombre}
+              </option>
+            ))}
         </select>
-
         <div
           style={{
             marginLeft: "20px",
