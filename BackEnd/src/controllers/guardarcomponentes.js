@@ -8,7 +8,7 @@ module.exports.guardarcomponentes = (req, res) => {
       error: "Se requieren los IDs de los activos, el ID del mantenimiento y los componentes nuevos.",
     });
   }
-
+  console.log(nuevosComponentes);
   // Consulta para obtener id_detalle_mantenimiento
   const queryDetalleMantenimiento = `
     SELECT id_detalle_mantenimiento
@@ -33,16 +33,10 @@ module.exports.guardarcomponentes = (req, res) => {
       const idDetalleMantenimiento = results[0].id_detalle_mantenimiento;
 
       // Construir los datos para historial_componentes
-      const componentesData = Object.entries(nuevosComponentes).map(([tipo, idComponente]) => [
-        idDetalleMantenimiento,
-        tipo === "procesador" || tipo === "ram" || tipo === "disco" || tipo === "grafica" || tipo === "fuente"
-          ? idComponente
-          : null,
-        tipo !== "procesador" && tipo !== "ram" && tipo !== "disco" && tipo !== "grafica" && tipo !== "fuente"
-          ? idComponente
-          : null,
+      const componentesData = nuevosComponentes.map((componente) => [
+        idDetalleMantenimiento, componente.id
       ]);
-
+console.log(componentesData);
       if (componentesData.length === 0) {
         return res.status(400).json({ error: "No hay componentes válidos para insertar." });
       }
@@ -60,7 +54,7 @@ module.exports.guardarcomponentes = (req, res) => {
 
         // Inserción en historial_componentes
         const historialQuery = `
-          INSERT INTO historial_componentes (id_detalle_mantenimiento, componente_interno, accesorio)
+          INSERT INTO historial_componentes (id_detalle_mantenimiento, componente_interno)
           VALUES ?`;
 
         connection.query(historialQuery, [componentesData], (error) => {
@@ -70,10 +64,11 @@ module.exports.guardarcomponentes = (req, res) => {
           }
 
           // Construir los datos para activos_componentes
-          const activosComponentesData = Object.values(nuevosComponentes).map((idComponente) => [
+          const activosComponentesData = nuevosComponentes.map((componente) => [
             idActivo,
-            idComponente,
+            componente.id, // Extraer solo el id
           ]);
+          
 
           if (activosComponentesData.length === 0) {
             return res.status(400).json({ error: "No hay componentes válidos para insertar en activos." });
