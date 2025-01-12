@@ -115,7 +115,6 @@ const MantenimientosPrincipal = ({ onEdit }) => {
 
   return (
     <div className="container">
-
       {/* Controles superiores */}
       <div className="mb-3">
         <button
@@ -320,7 +319,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       </div>
       {mostrarRegFormulario && (
         <div
-          className="modal fade show d-flex justify-content-center align-items-center"
+          className="modal fade show d-flex justify-content-center align-items-center overflow-hidden"
           style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }} // Fondo semitransparente
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
@@ -391,7 +390,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                       <td>{mantenimiento.descripcion}</td>
                       <td className="text-center" style={{ padding: 0 }}>
                         <button
-                          onClick={() => handleVerClick(mantenimiento)} 
+                          onClick={() => handleVerClick(mantenimiento)}
                           style={{
                             backgroundColor: "#a32126",
                             color: "white",
@@ -455,7 +454,6 @@ const MantenimientosPrincipal = ({ onEdit }) => {
         )}
       </div>
     </div>
-
   );
 };
 MantenimientosPrincipal.propTypes = {

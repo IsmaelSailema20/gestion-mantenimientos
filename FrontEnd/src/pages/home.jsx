@@ -6,6 +6,7 @@ import { parseJwt } from "../MAIN/Main";
 import ExcelReader from "../Components/ExcelReader";
 import { useRef } from "react";
 import MantenimientosPrincipal from "../Components/MantenimientosPrincipal";
+import ReportesGestion from "../Components/ReportesGestion";
 
 const Home = () => {
   const [vistaActual, setVistaActual] = useState("mantenimientos"); // Estado para manejar la vista actual
@@ -129,74 +130,72 @@ const Home = () => {
   };
   return (
     <>
+      {/* Encabezado */}
       <div
         style={{
           backgroundColor: "rgb(163, 33, 38)",
           color: "white",
-          height: "100px", // Reducir altura
-          padding: "10px 20px", // Ajustar padding
+          height: "100px",
+          padding: "10px 20px",
         }}
         className="d-flex justify-content-between align-items-center"
       >
-      <div className="d-flex align-items-center gap-3">
-        {/* Botón Activos/Mantenimientos */}
-        <button
-          onClick={() =>
-            vistaActual === "inicio"
-              ? cambiarAVista("mantenimientos")
-              : cambiarAVista("inicio")
-          }
-          className="btn"
-          style={{
-            backgroundColor:
-              rol === "admin"
-                ? "white"
-                : rol === "laboratorista"
-                ? "white"
-                : "black",
-            color:
-              rol === "admin" || rol === "laboratorista" ? "black" : "white",
-            borderRadius: "35px",
-            fontSize: "20px",
-            padding: "10px 20px",
-            fontWeight: "bold",
-          }}
-        >
-          {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
-        </button>
-
-        {/* Botón Reportes de Gestión */}
-        {vistaActual === "mantenimientos" && (
+        <div className="d-flex align-items-center gap-3">
+          {/* Botón Mantenimientos */}
           <button
             className="btn"
+            onClick={() => cambiarAVista("mantenimientos")}
             style={{
               backgroundColor:
-                rol === "admin"
-                  ? "white"
-                  : rol === "laboratorista"
-                  ? "white"
-                  : "black",
-              color:
-                rol === "admin" || rol === "laboratorista" ? "black" : "white",
+                vistaActual === "mantenimientos" ? "lightgray" : "white",
+              color: vistaActual === "mantenimientos" ? "black" : "gray",
               borderRadius: "35px",
-              fontSize: "20px", // Reducir tamaño de texto
-              padding: "10px 20px", // Reducir padding
-              fontWeight: "bold",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "mantenimientos" ? "bold" : "normal",
+            }}
+          >
+            Mantenimientos
+          </button>
+          {/* Botón Inicio */}
+          <button
+            className="btn"
+            onClick={() => cambiarAVista("inicio")}
+            style={{
+              backgroundColor: vistaActual === "inicio" ? "lightgray" : "white",
+              color: vistaActual === "inicio" ? "black" : "gray",
+              borderRadius: "35px",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "inicio" ? "bold" : "normal",
+            }}
+          >
+            Activos
+          </button>
+
+          {/* Botón Reportes de Gestión */}
+          <button
+            className="btn"
+            onClick={() => cambiarAVista("reportesGestion")}
+            style={{
+              backgroundColor:
+                vistaActual === "reportesGestion" ? "lightgray" : "white",
+              color: vistaActual === "reportesGestion" ? "black" : "gray",
+              borderRadius: "35px",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "reportesGestion" ? "bold" : "normal",
               cursor: rol === "admin" ? "pointer" : "not-allowed",
               opacity: rol === "admin" ? 1 : 0.6,
-              pointerEvents: rol === "admin" ? "auto" : "none", // Deshabilita interacción
-            }}
-            onClick={() => {
-              if (rol === "admin") {
-                console.log("Generando Reportes de Gestión");
-              }
+              pointerEvents: rol === "admin" ? "auto" : "none",
             }}
             disabled={rol !== "admin"} // Deshabilitado si no es admin
           >
             Reportes de Gestión
           </button>
-        )}
-      </div>
+        </div>
+
+        {/* Botón Cerrar Sesión */}
         <div className="d-flex align-items-center">
           <button
             className="btn text-white d-flex align-items-center"
@@ -205,7 +204,7 @@ const Home = () => {
             <img
               src="/SESION CERR.png"
               alt="Cerrar Sesión"
-              style={{ width: "40px", height: "40px", marginRight: "8px" }} // Reducir tamaño de icono
+              style={{ width: "40px", height: "40px", marginRight: "8px" }}
             />
             Cerrar Sesión
           </button>
@@ -339,6 +338,7 @@ const Home = () => {
           </>
         )}
         {vistaActual === "mantenimientos" && <MantenimientosPrincipal />}
+        {vistaActual === "reportesGestion" && <ReportesGestion />}
       </div>
     </>
   );
