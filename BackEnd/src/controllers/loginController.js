@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 module.exports.login = (req, res) => {
     const { username, password } = req.body;
     const queryUser = "SELECT * FROM USUARIOS WHERE USERNAME = ?";
-    const updateAttempts = "UPDATE USUARIOS SET login_attempts = login_attempts + 1 WHERE username = ?";
+    const updateAttempts = "UPDATE USUARIOS SET login_attempts = login_attempts + 1 WHERE username = ? AND rol = 'laboratorista'";
     const resetAttempts = "UPDATE USUARIOS SET login_attempts = 0 WHERE username = ?";
     const maxAttempts = 3;
 
