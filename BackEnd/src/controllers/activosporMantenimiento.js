@@ -12,13 +12,18 @@ module.exports.activosporMantenimiento = (req, res) => {
     a.fecha_registro,
     dm.estado_mantenimiento,
     m.fecha_fin,
-    dm.id_detalle_mantenimiento as detalle_mantenimiento
+    dm.id_detalle_mantenimiento as detalle_mantenimiento,
+    mo.nombre as modelo,
+            ma.nombre as marca
+
 FROM 
     activos a
 JOIN 
     modelos mo ON a.id_modelo = mo.id_modelo
 JOIN 
     tipos_activo ta ON mo.id_tipo = ta.id_tipo
+     join 
+    marcas ma on mo.id_marca = ma.id_marca
 LEFT JOIN 
     detalle_mantenimiento dm ON a.id_activo = dm.id_activo
 LEFT JOIN 

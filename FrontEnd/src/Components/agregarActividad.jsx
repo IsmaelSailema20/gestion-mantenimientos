@@ -13,6 +13,7 @@ function AgregarActividad({
   const [actividadSeleccionada, setActividadSeleccionada] = useState("");
   const [actividadSeleccionadaNombre, setActividadSeleccionadaNombre] =
     useState("");
+
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulariosActivos, setFormulariosActivos] = useState([]);
   const [error, setError] = useState("");
@@ -26,6 +27,7 @@ function AgregarActividad({
 
   useEffect(() => {
     // Consultar actividades disponibles
+    console.log(activosSeleccionados);
     const cargarActividades = async () => {
       try {
         const response = await axios.get(
@@ -91,10 +93,9 @@ function AgregarActividad({
       }, 3000);
       return;
     }
-    if (actividadSeleccionadaNombre === "Cambio de componentes") {
-      const todosSonCPU = activosSeleccionados.tipo_activo === "CPU"
-      ;
 
+    if (actividadSeleccionadaNombre === "Cambio de componentes") {
+      const todosSonCPU = activosSeleccionados.tipo_activo === "CPU";
       if (!todosSonCPU) {
         setModalDataError({
           titulo: "Error de Validación",
@@ -129,7 +130,6 @@ function AgregarActividad({
     }
 
     try {
-     
       const response = await axios.post(
         "http://localhost:5000/insertarActividad",
         {
@@ -169,7 +169,11 @@ function AgregarActividad({
       setError("Error al agregar la actividad.");
     }
   };
-
+  const handleEliminarActividad = (actividadId) => {
+    setActividadesSeleccionadas((prevState) =>
+      prevState.filter((actividad) => actividad.id !== actividadId)
+    );
+  };
   const handleChangeComponent = (e, idActivo, tipoComponente) => {
     setFormulariosActivos((prev) =>
       prev.map((form) =>
@@ -233,13 +237,32 @@ function AgregarActividad({
       setError("Error al agregar la actividad.");
     }
   };
+
   const handleGuardar = (data) => {
     console.log("Componentes guardados:", data);
     // Aquí puedes enviar los datos a la API o realizar otra acción
   };
   return (
-    <div>
-      <h4>Agregar Actividad</h4>
+    <div
+      style={{
+        justifyContent: "center", // Centra horizontalmente
+        marginTop: "10px", // Espaciado adicional si lo necesitas
+        display: "flex",
+        flexDirection: "column", // Organiza los elementos en columna
+        alignItems: "center", // Centra el contenido horizontalmente
+        position: "relative", // Necesario para posicionar el botón en la esquina
+      }}
+    >
+      <h4
+        style={{
+          fontWeight: "bold",
+          color: "black",
+          textAlign: "center",
+        }}
+      >
+        Asignación de Actividades
+      </h4>
+
       <span
         className="close"
         style={{
@@ -247,25 +270,54 @@ function AgregarActividad({
           cursor: "pointer",
           fontWeight: "bold",
           color: "#921c21",
+          position: "absolute",
+          top: "10px",
+          right: "10px",
         }}
-        onClick={closeModal}
+        onClick={() => console.log("Modal cerrado")}
       >
         &times;
       </span>
-      <div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <label htmlFor="actividad">Selecciona una actividad:</label>
+
+      <div
+        style={{
+          marginTop: "20px",
+          marginLeft: "65px",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: "20px",
+        }}
+      >
+        <p>
+          <strong>Numero de Serie:</strong> {activosSeleccionados.numero_serie}
+        </p>
+        <p>
+          <strong>Activo:</strong> {activosSeleccionados.tipo_activo}
+        </p>
+        <p>
+          <strong>Marca:</strong> {activosSeleccionados.marca}
+        </p>
+        <p>
+          <strong>Modelo:</strong> {activosSeleccionados.modelo}
+        </p>
+      </div>
+
+      {/* Colocando el select a la izquierda */}
+      <div
+        style={{
+          marginTop: "20px",
+          width: "100%",
+          display: "flex",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        }}
+      >
         <select
           id="actividad"
           value={actividadSeleccionada}
-          onChange={(e) => {
-            const selectedId = e.target.value; // ID seleccionado como string
-            const selectedActividad = actividades.find(
-              (actividad) => actividad.id.toString() === selectedId
-            );
-            setActividadSeleccionada(selectedId);
-            setActividadSeleccionadaNombre(selectedActividad?.nombre || "");
-          }}
+          onChange={(e) => setActividadSeleccionada(e.target.value)}
+          style={{ padding: "8px", fontSize: "1rem" }}
         >
           <option value="">Seleccione una actividad</option>
           {actividades.map((actividad) => (
@@ -274,45 +326,70 @@ function AgregarActividad({
             </option>
           ))}
         </select>
+
+        {/* Recuadro para mostrar las actividades seleccionadas */}
+        <div
+          style={{
+            marginLeft: "20px",
+            padding: "8px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            minWidth: "300px",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            justifyContent: "flex-start",
+          }}
+        >
+          {actividadesSeleccionadas.length === 0 ? (
+            <span>Selecciona actividades</span>
+          ) : (
+            actividadesSeleccionadas.map((actividad) => (
+              <div
+                key={actividad.id}
+                style={{
+                  backgroundColor: "#f0f0f0",
+                  padding: "5px 10px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {actividad.nombre}
+                <span
+                  onClick={() => handleEliminarActividad(actividad.id)}
+                  style={{
+                    cursor: "pointer",
+                    marginLeft: "8px",
+                    color: "red",
+                    fontWeight: "bold",
+                  }}
+                >
+                  &times;
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
       <button
         onClick={handleAgregarActividad}
         style={{
           marginTop: "10px",
           backgroundColor: "#921c21",
           color: "white",
-          padding: "10px 20px",
+          padding: "7px 20px",
           border: "none",
           borderRadius: "5px",
           cursor: "pointer",
+          marginBottom: "20px", // Ajusta el espaciado en la parte inferior si es necesario
         }}
       >
         Agregar Actividad
       </button>
-      {showModal && (
-        <SuccessModal
-          titulo={modalData.titulo}
-          mensaje={modalData.mensaje}
-          onClose={() => setShowModal(false)}
-        />
-      )}
-      {showModalError && (
-        <ErrorModal
-          titulo={modalDataError.titulo}
-          mensaje={modalDataError.mensaje}
-          onClose={() => setShowModalError(false)}
-        />
-      )}
-      {mostrarFormulario && (
-        <ActualizarComponentesModal
-          formulariosActivos={formulariosActivos}
-          onChangeComponent={handleChangeComponent}
-          onSubmit={handleSubmitFormularios}
-          onClose={() => setMostrarFormulario(false)}
-          onGuardar={handleGuardar}
-          idMantenimiento={idMantenimiento}
-        />
-      )}
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 }

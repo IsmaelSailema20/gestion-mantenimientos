@@ -17,12 +17,10 @@ function MantenimientoVisual() {
   );
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
 
-
   const [fechaInicio, setFechaInicio] = useState(mantenimiento?.inicio || "");
   const [fechaFin, setFechaFin] = useState(mantenimiento?.fin || "");
   const [tipo, setTipo] = useState(mantenimiento?.tipo || "preventivo");
   const [estado, setEstado] = useState(mantenimiento?.estado || "");
-  const [dataMantenimiento, setdataMantenimiento] = useState(null);
   const id = mantenimiento?.numero;
   const [activos, setActivos] = useState([]);
   const [selectedActivos, setSelectedActivos] = useState([]);
@@ -40,6 +38,19 @@ function MantenimientoVisual() {
   const [isDisabled, setIsDisabled] = useState(false);
 
   useEffect(() => {
+    if (!mantenimiento?.numero) {
+      const savedMantenimiento = JSON.parse(
+        localStorage.getItem("mantenimiento")
+      );
+      if (savedMantenimiento) {
+        setMantenimiento(savedMantenimiento);
+      } else {
+        console.error("No se encontraron datos de mantenimiento.");
+        navigate("/"); // Redirige al usuario si no hay datos.
+      }
+    } else {
+      localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
+    }
     const fetchActivos = async () => {
       try {
         const response = await axios.post(
@@ -52,7 +63,7 @@ function MantenimientoVisual() {
         setError("No se pudieron cargar los activos.");
       }
     };
-    const consultarMantenimiento = async () => {
+    /*const consultarMantenimiento = async () => {
       try {
         const response = await axios.post(
           "http://localhost:5000/consultarMantenimiento",
@@ -70,8 +81,8 @@ function MantenimientoVisual() {
         console.error("Error al consultar el mantenimiento:", err);
       }
     };
-
-    consultarMantenimiento();
+*/
+  //  consultarMantenimiento();
     fetchActivos();
   }, [id]);
 
@@ -87,7 +98,6 @@ function MantenimientoVisual() {
     console.log("ID del activo:", idActivo);
     setMostrarAgregarActividad(true);
     setActivoSeleccionado(idActivo);
-    
   };
 
   const cerrarAgregarActividad = () => {
@@ -211,7 +221,7 @@ function MantenimientoVisual() {
   };
   const CerrarSesion = () => {
     localStorage.removeItem("token");
-     navigate("/");
+    navigate("/");
   };
   return (
     <div>
@@ -228,8 +238,10 @@ function MantenimientoVisual() {
           <button></button>
         </div>
         <div className="d-flex align-items-center">
-          <button className="btn text-white d-flex align-items-center"
-          onClick={CerrarSesion}>
+          <button
+            className="btn text-white d-flex align-items-center"
+            onClick={CerrarSesion}
+          >
             <img
               src="../../public/SESION CERR.png"
               alt="Cerrar Sesión"
@@ -411,8 +423,8 @@ function MantenimientoVisual() {
                   <td>
                     {activo.estado_mantenimiento === "en proceso" && (
                       <a
-                      onClick={() => agregarActividad(activo.id_activo)}
-                      style={{
+                        onClick={() => agregarActividad(activo)}
+                        style={{
                           color: "rgb(163, 33, 38)",
                           cursor: "pointer",
                           marginTop: "10px",
