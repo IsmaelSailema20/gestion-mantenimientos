@@ -3,7 +3,7 @@ const connection = require('../models/db');
 module.exports.insertarActividad = (req, res) => {
     const { idActivos, idActividad, idMantenimiento } = req.body;
 
-    if (!idActivos || !Array.isArray(idActivos) || idActivos.length === 0 || !idActividad) {
+    if (!idActivos ) {
         return res.status(400).json({ error: "Se requieren los IDs de los activos y el ID de la actividad." });
     }
 
@@ -32,7 +32,7 @@ module.exports.insertarActividad = (req, res) => {
 
             if (results.length === 0) {
                 return connection.rollback(() => {
-                    res.status(400).json({ error: "No se encontraron detalles de mantenimiento para los activos y el mantenimiento especificado." });
+                    res.status(400).json({ error: "No se encontraron detalles de mantenimiento para los activos y el mantenimiento especificado." +" "+idActivos+" "+idMantenimiento});
                 });
             }
 

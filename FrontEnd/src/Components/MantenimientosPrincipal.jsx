@@ -93,9 +93,9 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       nuevoMantenimiento,
     ]);
   };
-  const handleVerClick = (id) => {
+  const handleVerClick = (mantenimiento) => {
     // Redirige a la ruta de mantenimientoVisual pasando el id como parámetro
-    navigate(`/mantenimientoVisual/${id}`);
+    navigate(`/mantenimientoVisual`, { state: { mantenimiento } });
   };
   // Calcular mantenimientos para la página actual
   const totalPages = Math.ceil(filteredMantenimientos.length / itemsPerPage);
@@ -391,7 +391,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                       <td>{mantenimiento.descripcion}</td>
                       <td className="text-center" style={{ padding: 0 }}>
                         <button
-                          onClick={() => handleVerClick(mantenimiento.numero)} // Usa el id para redirigir
+                          onClick={() => handleVerClick(mantenimiento)} 
                           style={{
                             backgroundColor: "#a32126",
                             color: "white",
