@@ -7,10 +7,21 @@ import SuccessModal from "../Components/SuccessModal";
 import ErrorModal from "../Components/ErrorModal";
 import { useNavigate } from "react-router-dom";
 import ActividadesPorMantenimiento from "../Components/actMantenimiento"; // Ajusta la ruta según la ubicación real
+import { useLocation } from "react-router-dom";
 
 function MantenimientoVisual() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { id } = useParams(); // Obtiene el id de la URL
+  const [mantenimiento, setMantenimiento] = useState(
+    location.state?.mantenimiento || {}
+  );
+  const [activoSeleccionado, setActivoSeleccionado] = useState(null);
+
+  const [fechaInicio, setFechaInicio] = useState(mantenimiento?.inicio || "");
+  const [fechaFin, setFechaFin] = useState(mantenimiento?.fin || "");
+  const [tipo, setTipo] = useState(mantenimiento?.tipo || "preventivo");
+  const [estado, setEstado] = useState(mantenimiento?.estado || "");
+  const id = mantenimiento?.numero;
   const [activos, setActivos] = useState([]);
   const [selectedActivos, setSelectedActivos] = useState([]);
   const [mostrarTablaAgregar, setMostrarTablaAgregar] = useState(false);
@@ -27,6 +38,19 @@ function MantenimientoVisual() {
   const [isDisabled, setIsDisabled] = useState(false);
 
   useEffect(() => {
+    if (!mantenimiento?.numero) {
+      const savedMantenimiento = JSON.parse(
+        localStorage.getItem("mantenimiento")
+      );
+      if (savedMantenimiento) {
+        setMantenimiento(savedMantenimiento);
+      } else {
+        console.error("No se encontraron datos de mantenimiento.");
+        navigate("/"); // Redirige al usuario si no hay datos.
+      }
+    } else {
+      localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
+    }
     const fetchActivos = async () => {
       try {
         const response = await axios.post(
@@ -39,7 +63,7 @@ function MantenimientoVisual() {
         setError("No se pudieron cargar los activos.");
       }
     };
-    const consultarMantenimiento = async () => {
+    /*const consultarMantenimiento = async () => {
       try {
         const response = await axios.post(
           "http://localhost:5000/consultarMantenimiento",
@@ -47,16 +71,18 @@ function MantenimientoVisual() {
             id: id,
           }
         );
-        console.log(response.data[0].fecha_fin);
+        console.log(mantenimiento);
+        setdataMantenimiento(response.data);
+        console.log(response.data);
         if (response.data && response.data[0].fecha_fin) {
-          setIsDisabled(true); // Bloquea los botones si fecha_fin existe
+          setIsDisabled(true);
         }
       } catch (err) {
         console.error("Error al consultar el mantenimiento:", err);
       }
     };
-
-    consultarMantenimiento();
+*/
+  //  consultarMantenimiento();
     fetchActivos();
   }, [id]);
 
@@ -68,8 +94,10 @@ function MantenimientoVisual() {
     setMostrarTablaAgregar(false);
   };
 
-  const agregarActividad = () => {
+  const agregarActividad = (idActivo) => {
+    console.log("ID del activo:", idActivo);
     setMostrarAgregarActividad(true);
+    setActivoSeleccionado(idActivo);
   };
 
   const cerrarAgregarActividad = () => {
@@ -177,29 +205,146 @@ function MantenimientoVisual() {
     }
   };
 
+  const handleFechaInicioChange = (e) => {
+    setFechaInicio(e.target.value);
+  };
+
+  const handlefechaFinChange = (e) => {
+    setfechaFin(e.target.value);
+  };
+
+  const handleTipoChange = (e) => {
+    setTipo(e.target.value);
+  };
+  const handleEstadoChange = (e) => {
+    setTipo(e.target.value);
+  };
+  const CerrarSesion = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
   return (
     <div>
+      <div
+        style={{
+          backgroundColor: "rgb(163, 33, 38)",
+          color: "white",
+          height: "60px", // Reducir altura
+          padding: "10px 20px", // Ajustar padding
+        }}
+        className="d-flex justify-content-between align-items-center"
+      >
+        <div className="d-flex align-items-center">
+          <button></button>
+        </div>
+        <div className="d-flex align-items-center">
+          <button
+            className="btn text-white d-flex align-items-center"
+            onClick={CerrarSesion}
+          >
+            <img
+              src="../../public/SESION CERR.png"
+              alt="Cerrar Sesión"
+              style={{ width: "40px", height: "40px", marginRight: "8px" }} // Reducir tamaño de icono
+            />
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
       <button
         onClick={() => navigate("/")}
         className="btn"
         style={{
-          backgroundColor: "rgb(163, 33, 38)",
-          color: "white",
+          backgroundColor: "rgb(255, 255, 255)",
+          color: "black",
+          cursor: "pointer",
+          fontWeight: "bold",
+          borderRadius: "35px",
+          fontSize: "18px",
+          padding: "5px 15px",
           marginRight: "10px",
           position: "absolute",
           top: "10px",
           left: "10px",
-          padding: "10px 20px",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
         }}
       >
         Volver
       </button>
-      <h1 style={{ textAlign: "center", marginTop: "50px" }}>
-        Mantenimiento N° {id}
-      </h1>
+      <div style={{ padding: "20px", backgroundColor: "", color: "black" }}>
+        <h2
+          style={{ textAlign: "center", color: "black", marginBottom: "20px" }}
+        >
+          MANTENIMIENTO N° {id}
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            margin: "20px 0",
+          }}
+        >
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Código mantenimiento:</label>
+            <p>{mantenimiento.codigo}</p>
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Fecha Inicio:</label>
+            <input
+              type="date"
+              value={fechaInicio}
+              style={{ width: "100%" }}
+              onChange={handleFechaInicioChange}
+            />
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Fecha Fin:</label>
+            <input
+              type="date"
+              value={fechaFin}
+              style={{ width: "100%" }}
+              onChange={handlefechaFinChange}
+            />
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Tipo Mantenimiento:</label>
+            <select
+              style={{ width: "100%" }}
+              value={tipo}
+              onChange={handleTipoChange}
+            >
+              <option value="preventivo">Preventivo</option>
+              <option value="correctivo">Correctivo</option>
+            </select>
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Entidad Encargada:</label>
+            <select style={{ width: "100%" }}>
+              <option value="laboratorista">Laboratorista</option>
+              <option value="externo">Externo</option>
+            </select>
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Estado Mantenimiento:</label>
+            <select
+              style={{ width: "100%" }}
+              value={estado}
+              onChange={handleEstadoChange}
+            >
+              <option value="en_proceso">En Proceso</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+          </div>
+          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Responsable:</label>
+            <select style={{ width: "25%" }}>
+              <option value="luis_fernandez">Luis Fernandez</option>
+              <option value="ana_gomez">Ana Gomez</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div style={{ margin: "20px auto", maxWidth: "80%" }}>
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <button
@@ -214,19 +359,8 @@ function MantenimientoVisual() {
           >
             Agregar Activos
           </button>
-          <button
-            onClick={agregarActividad}
-            className="btn"
-            style={{
-              backgroundColor: "rgb(163, 33, 38)",
-              color: "white",
-              marginRight: "10px",
-            }}
-            disabled={isDisabled}
-          >
-            Agregar Actividad
-          </button>
-          <button
+
+          {/** * <button
             onClick={finalizarMantenimientoTotal}
             className="btn"
             style={{
@@ -238,6 +372,7 @@ function MantenimientoVisual() {
           >
             Finalizar Mantenimiento
           </button>
+          */}
         </div>
         <table
           className="table-bordered"
@@ -255,7 +390,7 @@ function MantenimientoVisual() {
             }}
           >
             <tr>
-              <th scope="col">Seleccionar</th>
+              {/* <th scope="col">Seleccionar</th>*/}
               <th scope="col">ID Activo</th>
               <th scope="col">Número de Serie</th>
               <th scope="col">Tipo de Activo</th>
@@ -267,7 +402,7 @@ function MantenimientoVisual() {
             {activos.length > 0 ? (
               activos.map((activo) => (
                 <tr key={activo.id_activo}>
-                  <td>
+                  {/** <td>
                     <input
                       type="checkbox"
                       disabled={
@@ -280,7 +415,7 @@ function MantenimientoVisual() {
                       onChange={() => handleSelectActivo(activo)}
                     />
                   </td>
-
+            */}
                   <td>{activo.id_activo}</td>
                   <td>{activo.numero_serie}</td>
                   <td>{activo.tipo_activo}</td>
@@ -288,7 +423,7 @@ function MantenimientoVisual() {
                   <td>
                     {activo.estado_mantenimiento === "en proceso" && (
                       <a
-                        onClick={() => finalizarMantenimiento(activo.id_activo)}
+                        onClick={() => agregarActividad(activo)}
                         style={{
                           color: "rgb(163, 33, 38)",
                           cursor: "pointer",
@@ -297,7 +432,7 @@ function MantenimientoVisual() {
                         }}
                         href="#"
                       >
-                        Finalizar Mantenimiento
+                        Agregar actividad
                       </a>
                     )}
                   </td>
@@ -334,9 +469,7 @@ function MantenimientoVisual() {
           </div>
         </div>
       )}
-      <div style={{ marginTop: "40px", textAlign: "center" }}>
-        <ActividadesPorMantenimiento idMantenimiento={id} />
-      </div>
+
       {mostrarAgregarActividad && (
         <div
           className="modal fade show"
@@ -351,7 +484,7 @@ function MantenimientoVisual() {
             <div className="modal-content">
               <div className="modal-body">
                 <AgregarActividad
-                  activosSeleccionados={selectedActivos}
+                  activosSeleccionados={activoSeleccionado}
                   closeModal={cerrarAgregarActividad}
                   idMantenimiento={id}
                 />

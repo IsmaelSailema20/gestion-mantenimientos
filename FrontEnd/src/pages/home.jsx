@@ -8,7 +8,7 @@ import { useRef } from "react";
 import MantenimientosPrincipal from "../Components/MantenimientosPrincipal";
 
 const Home = () => {
-  const [vistaActual, setVistaActual] = useState("inicio"); // Estado para manejar la vista actual
+  const [vistaActual, setVistaActual] = useState("mantenimientos"); // Estado para manejar la vista actual
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para mostrar el formulario
   const [activos, setActivos] = useState([]);
@@ -213,12 +213,18 @@ const Home = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="container mt-3 mb-3"> {/* Reducir márgenes */}
+      <div className="container mt-3 mb-3">
+        {" "}
+        {/* Reducir márgenes */}
         {vistaActual === "inicio" && (
           <>
-            <h1 className="mb-3" style={{ fontSize: "24px" }}>Bienvenido {username}</h1>
+            <h1 className="mb-3" style={{ fontSize: "24px" }}>
+              Bienvenido {username}
+            </h1>
 
-            <div className="mb-3 d-flex gap-2"> {/* Reducir espacio entre botones */}
+            <div className="mb-3 d-flex gap-2">
+              {" "}
+              {/* Reducir espacio entre botones */}
               <button
                 className="btn"
                 style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}

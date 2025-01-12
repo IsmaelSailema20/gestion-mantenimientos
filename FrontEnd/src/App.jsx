@@ -13,7 +13,7 @@ function App() {
         <Route path="/" element={<Main />} />
         
         {/* Ruta para visualizar detalles del mantenimiento */}
-        <Route path="/mantenimientoVisual/:id" element={<MantenimientoVisual />} />
+        <Route path="/mantenimientoVisual" element={<MantenimientoVisual />} />
       </Routes>
     </Router>
   );
