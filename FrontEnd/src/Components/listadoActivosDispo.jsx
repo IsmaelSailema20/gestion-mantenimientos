@@ -110,15 +110,36 @@ function Listadoactivo({ closeModal, idMantenimiento }) {
   };
   return (
     <div>
-      <div className="d-flex justify-content-between text-center align-items-center mb-4">
-        <h4>Seleccionar Activos</h4>
+      <div
+        className="d-flex justify-content-center text-center align-items-center mb-4"
+        style={{ position: "relative" }} // Añadir posición relativa al contenedor
+      >
+        <h4
+          style={{
+            fontWeight: "bold",
+            textAlign: "center",
+            marginTop: "-12px",
+            backgroundColor: "#a32126",
+            padding: "15px 20px",
+            borderRadius: "5px 5px 0 0",
+            color: "white",
+            margin: "0",
+            width: "102%",
+            boxSizing: "border-box",
+          }}
+        >
+          Seleccionar Activos
+        </h4>
         <span
           className="close"
           style={{
             fontSize: "2rem",
             cursor: "pointer",
             fontWeight: "bold",
-            color: "#921c21",
+            color: "white", 
+            position: "absolute", 
+            top: "10px",
+            right: "10px",
           }}
           onClick={closeModal}
         >
@@ -183,7 +204,7 @@ function Listadoactivo({ closeModal, idMantenimiento }) {
                     />
                   </td>
                   <td>{activo.numero_serie}</td>
-                  <td>{activo.tipo_activo}</td>
+                  <td>{activo.clase}</td>
                   <td>{activo.tipo}</td>
                   <td>{activo.estado}</td>
                   <td>{activo.ubicacion}</td>
@@ -201,17 +222,21 @@ function Listadoactivo({ closeModal, idMantenimiento }) {
         </div>
       </div>
 
-      <div style={{ marginTop: "20px", textAlign: "right" }}>
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        {" "}
+        {/* Cambiado a center */}
         <button
           onClick={handleSubmit}
           className="btn"
           style={{
-            backgroundColor: "rgb(163, 33, 38)",
+            marginTop: "10px",
+            backgroundColor: "#921c21",
             color: "white",
-            padding: "10px 20px",
+            padding: "7px 20px",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
+            marginBottom: "20px",
           }}
         >
           Agregar Activos

@@ -40,7 +40,7 @@ function AgregarActividad({
           "http://localhost:5000/consultarActividades"
         );
         const actividadesDisponibles = response.data;
-  
+
         const responseAnteriores = await axios.post(
           "http://localhost:5000/actividadesRealizadas",
           {
@@ -48,23 +48,27 @@ function AgregarActividad({
           }
         );
         const actividadesPrevias = responseAnteriores.data;
-  
         const tieneCambioDeComponentes = actividadesPrevias.some(
           (actividad) => actividad.nombre === "Cambio de componentes"
         );
-  
+        if (tieneCambioDeComponentes) {
+          setshowComp("Cambio de componentes"); // Mostrar el formulario de componentes
+          await cargarComponentes(); // Cargar componentes desde el servidor
+        }
+        console.log("Actividades previas:", actividadesPrevias);
+        console.log(actividadesDisponibles);
+
         setActividadesSeleccionadas(actividadesPrevias);
-  
+
+        // Filtrar actividades que no están en actividadesPrevias
         const actividadesFiltradas = actividadesDisponibles.filter(
           (actividad) =>
             !actividadesPrevias.some((previa) => previa.id === actividad.id)
         );
+        console.log(actividadesFiltradas);
+
         setActividades(actividadesFiltradas);
-  
-        if (tieneCambioDeComponentes) {
-          await cargarComponentes(); // Cargar componentes
-        }
-  
+
         console.log("Actividades disponibles:", actividadesFiltradas);
         console.log("Actividades realizadas:", actividadesPrevias);
       } catch (err) {
@@ -72,7 +76,6 @@ function AgregarActividad({
         setError("Error al cargar actividades");
       }
     };
-  
     const cargarComponentes = async () => {
       try {
         const response = await axios.post(
@@ -83,32 +86,24 @@ function AgregarActividad({
         );
         const componentesGuardados = response.data;
         setComponentesSeleccionados(componentesGuardados);
-  
+
         const cmptotal = await axios.get("http://localhost:5000/componentes");
-        const datosComponentes = cmptotal.data;
-        setDatosComponentes(datosComponentes);
         setshowComp("Cambio de componentes");
-  
-        // Simular selección de componentes
-        componentesGuardados.forEach((componenteGuardado) => {
-          handleSeleccionarComponente({
-            target: { value: componenteGuardado.id.toString() },
-          });
-        });
-  
-        const categoriasDisponibles = Object.keys(datosComponentes);
+        setDatosComponentes(cmptotal.data);
+        console.log(cmptotal.data);
+       
+
+        const categoriasDisponibles = Object.keys(cmptotal.data);
         setCategorias(categoriasDisponibles);
-  
-        console.log("Componentes cargados:", datosComponentes);
+
+        console.error("Error al cargar componentes:", error);
       } catch (err) {
         console.error("Error al cargar componentes:", err);
         setError("Error al cargar componentes");
       }
     };
-  
     cargarActividades();
-  }, [activosSeleccionados]);
-  
+  }, []);
 
   const resetModalStates = () => {
     setShowModal(false);

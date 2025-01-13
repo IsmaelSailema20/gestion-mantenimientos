@@ -37,7 +37,9 @@ const {proveedoresParaFiltro} = require('../controllers/proveedoresParaFiltros.j
 const {claseParaFiltro}= require('../controllers/claseActivoParaFiltro.js');
 const {actividadesRealizadas}= require('../controllers/actividadesRealizadas.js');
 const {componentesSeleccionados}= require('../controllers/componentesSeleccionados.js');
+const {actividadesPorActivo}= require('../controllers/actividadesPorActivo.js');
 
+actividadesPorActivo
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -72,6 +74,7 @@ router.get('/proveedores-filtro', proveedoresParaFiltro); //FILTRO DE PROVEEDORE
 router.get('/clase-filtro', claseParaFiltro); //FILTRO DE PROVEEDORES
 router.post('/actividadesRealizadas', actividadesRealizadas);
 router.post('/componentesSeleccionados', componentesSeleccionados);
+router.post('/actividadesPorActivo', actividadesPorActivo);
 
 componentesSeleccionados
 module.exports = router;
