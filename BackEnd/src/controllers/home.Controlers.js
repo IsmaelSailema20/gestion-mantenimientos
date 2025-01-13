@@ -13,11 +13,15 @@ module.exports.getActivos = (req, res) => {
     DATE_FORMAT(a.fecha_registro, '%Y-%m-%d') AS fecha_registro,
     CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion,
     a.id_proveedor, 
+    prov.nombre,
     el.id_laboratorio,
     el.id_edificio AS id_ubicacion,
-    a.id_modelo, 
-     m.id_marca,
+    a.id_modelo,
+    m.nombre,
+	m.id_marca,
+    marc.nombre as nombre_marca,
     a.id_laboratorista,
+    CONCAT(lbrt.apellido,' ', lbrt.nombre) AS laboratorista,
     a.especificaciones,
     a.observaciones
 FROM 
@@ -32,6 +36,12 @@ JOIN
     modelos m ON a.id_modelo = m.id_modelo
 JOIN 
     tipos_activo ta ON m.id_tipo = ta.id_tipo
+JOIN 
+	proveedores prov ON a.id_proveedor = prov.id_proveedor
+JOIN 
+	marcas marc ON m.id_marca = marc.id_marca
+JOIN 
+	laboratoristas lbrt ON a.id_laboratorista = lbrt.cedula
 ORDER BY 
     a.id_activo DESC;		
     `;

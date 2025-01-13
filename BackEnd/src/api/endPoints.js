@@ -36,6 +36,14 @@ const {ubicacionesParaFiltro} = require('../controllers/ubicacionesParaFiltro.js
 const {proveedoresParaFiltro} = require('../controllers/proveedoresParaFiltros.js');
 const {claseParaFiltro}= require('../controllers/claseActivoParaFiltro.js');
 
+//COMPONENTES ACTIVOS
+const { componentesActivos } = require("../controllers/componentesActivos");
+
+//GRAFICOS
+const {frecuenciaMantenimientos} = require("../controllers/Graficos/frecuencia_mantenimientos");
+const {getTiposMantenimientosPorMes} = require("../controllers/Graficos/TipoMantenimientosPorMes");
+const {mantenimientosPorAnio} = require("../controllers/Graficos/mantenimientosPorAnio");
+const {encargadoMantenimientoAño} = require("../controllers/Graficos/encargadoMantenimientoAño");
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -68,6 +76,12 @@ router.get('/modelos-info', getModelosInfo); // Necesario para registrar por lot
 router.get('/ubicaciones-filtro', ubicacionesParaFiltro); //FILTRO DE UBICACIONES
 router.get('/proveedores-filtro', proveedoresParaFiltro); //FILTRO DE PROVEEDORES
 router.get('/clase-filtro', claseParaFiltro); //FILTRO DE PROVEEDORES
+router.get("/componentes/:id_activo", componentesActivos);
 
+//GRAFICOS
+router.get("/frecuencia_mantenimientos/:id_activo", frecuenciaMantenimientos);
+router.get("/tipos_mantenimientos_mes/:id_activo", getTiposMantenimientosPorMes);
+router.get("/mantenimientos_por_anio/:id_activo", mantenimientosPorAnio);
+router.get("/mantenimientos_empresa_laboratorista/:id_activo",encargadoMantenimientoAño)
 module.exports = router;
 
