@@ -30,6 +30,7 @@ WHERE
         FROM detalle_mantenimiento 
         WHERE estado_mantenimiento != 'finalizado'
     )
+        ORDER BY fecha_registro DESC
 ;
 
 

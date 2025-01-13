@@ -5,6 +5,7 @@ import FormularioMantenimiento from "../Components/FormularioMantenimiento";
 import { useNavigate } from "react-router-dom"; // Importa el hook useNavigate
 
 const MantenimientosPrincipal = ({ onEdit }) => {
+  const [rol, setRol] = useState("");
   const [mantenimientos, setMantenimientos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -318,7 +319,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
       </div>
       {mostrarRegFormulario && (
         <div
-          className="modal fade show d-flex justify-content-center align-items-center"
+          className="modal fade show d-flex justify-content-center align-items-center overflow-hidden"
           style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }} // Fondo semitransparente
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
@@ -389,7 +390,7 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                       <td>{mantenimiento.descripcion}</td>
                       <td className="text-center" style={{ padding: 0 }}>
                         <button
-                          onClick={() => handleVerClick(mantenimiento)} 
+                          onClick={() => handleVerClick(mantenimiento)}
                           style={{
                             backgroundColor: "#a32126",
                             color: "white",

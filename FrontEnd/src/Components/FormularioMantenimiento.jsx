@@ -107,8 +107,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
           descripcion,
           identificador,
           activos: selectedActivos,
-          fecha: fechaInicio
-          
+          fecha: fechaInicio,
         }
       );
 

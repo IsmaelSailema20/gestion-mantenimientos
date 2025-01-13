@@ -43,6 +43,7 @@ const TablaSeleccionActivos = ({
       ...prev,
       [campo]: valor,
     }));
+    console.log(filtrosSeleccionados);
   };
 
   // Consultar datos para los filtros desde la base de datos
@@ -70,16 +71,21 @@ const TablaSeleccionActivos = ({
 
   // Filtrar datos en base a los filtros seleccionados
   useEffect(() => {
-    let datosFiltrados = activos;
+    let datosFiltrados = [...activos]; // Aseguramos que estamos copiando el array y no modificando directamente
 
-    // Aplica cada filtro de los seleccionados
+    // Aplica cada filtro dinámico seleccionado (excluye fechas)
     for (const campo in filtrosSeleccionados) {
-      if (filtrosSeleccionados[campo]) {
+      if (
+        filtrosSeleccionados[campo] &&
+        campo !== "fechaInicio" &&
+        campo !== "fechaFin"
+      ) {
         datosFiltrados = datosFiltrados.filter(
           (activo) => activo[campo] === filtrosSeleccionados[campo]
         );
       }
     }
+
     // Aplica el filtro de búsqueda
     if (terminoBusqueda) {
       datosFiltrados = datosFiltrados.filter((activo) =>
@@ -88,49 +94,142 @@ const TablaSeleccionActivos = ({
           .includes(terminoBusqueda.toLowerCase())
       );
     }
+
+    // Aplica los filtros de rango de fechas basado en fecha_registro
+    if (filtrosSeleccionados.fechaInicio) {
+      datosFiltrados = datosFiltrados.filter((activo) => {
+        if (!activo.fecha_registro) {
+          return false;
+        }
+
+        const fechaRegistro = new Date(activo.fecha_registro)
+          .toISOString()
+          .split("T")[0];
+
+        return fechaRegistro >= filtrosSeleccionados.fechaInicio;
+      });
+    }
+
+    if (filtrosSeleccionados.fechaFin) {
+      datosFiltrados = datosFiltrados.filter((activo) => {
+        if (!activo.fecha_registro) {
+          return false;
+        }
+
+        const fechaRegistro = new Date(activo.fecha_registro)
+          .toISOString()
+          .split("T")[0];
+        return fechaRegistro <= filtrosSeleccionados.fechaFin;
+      });
+    }
+
+    // Actualizamos los datos filtrados
     setActivosFiltrados(datosFiltrados);
     setPaginaActual(1); // Reiniciar a la primera página al aplicar filtros
   }, [filtrosSeleccionados, terminoBusqueda, activos]);
 
+  const handleLimpiarFiltros = () => {
+    setFiltrosSeleccionados({});
+    setTerminoBusqueda(""); // Limpia el término de búsqueda
+    setActivosFiltrados(activos); // Restablece los datos filtrados a los originales
+    setPaginaActual(1); // Reinicia a la primera página
+  };
   return (
     <div>
-      <div
-        className="d-flex align-items-center mb-4"
-        style={{ position: "relative", width: "250px" }}
-      >
-        <input
-          type="text"
-          placeholder="Buscar Por Código"
-          style={{
-            border: "5px solid #a32126",
-            borderRadius: "20px",
-            padding: "5px 25px",
-            width: "250px",
-          }}
-          value={terminoBusqueda}
-          onChange={(e) => {
-            setTerminoBusqueda(e.target.value);
-            setPaginaActual(1); // Reiniciar a la primera página al buscar
-          }}
-          maxLength={20}
-        />
-        <button
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            backgroundColor: "transparent",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          <img
-            src="/lupa-de-busqueda.png"
-            alt="Buscar"
-            style={{ width: "20px", height: "20px" }}
+      {/* Input de búsqueda y filtros de fecha */}
+      <div className="d-flex align-items-center mb-4 gap-3">
+        {/* Input de búsqueda */}
+        <div style={{ position: "relative", width: "250px" }}>
+          <input
+            type="text"
+            placeholder="Buscar Por Código"
+            style={{
+              border: "5px solid #a32126",
+              borderRadius: "20px",
+              padding: "5px 25px",
+              width: "100%",
+            }}
+            value={terminoBusqueda}
+            onChange={(e) => {
+              setTerminoBusqueda(e.target.value);
+              setPaginaActual(1); // Reiniciar a la primera página al buscar
+            }}
+            maxLength={20}
           />
-        </button>
+          <button
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <img
+              src="/lupa-de-busqueda.png"
+              alt="Buscar"
+              style={{ width: "20px", height: "20px" }}
+            />
+          </button>
+        </div>
+
+        {/* Filtros de fecha */}
+        <div>
+          <label
+            htmlFor="fechaInicio"
+            style={{
+              marginRight: "15px",
+            }}
+          >
+            Fecha Inicio:
+          </label>
+          <input
+            type="date"
+            id="fechaInicio"
+            value={filtrosSeleccionados.fechaInicio || ""}
+            onChange={(e) => {
+              setFiltrosSeleccionados((prevFilters) => ({
+                ...prevFilters,
+                fechaInicio: e.target.value,
+              }));
+              setPaginaActual(1); // Reiniciar a la primera página
+            }}
+            style={{
+              borderRadius: "10px",
+              padding: "5px",
+              width: "150px",
+            }}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="fechaFin"
+            style={{
+              marginRight: "15px",
+            }}
+          >
+            Fecha Fin:
+          </label>
+          <input
+            type="date"
+            id="fechaFin"
+            value={filtrosSeleccionados.fechaFin || ""}
+            onChange={(e) => {
+              setFiltrosSeleccionados((prevFilters) => ({
+                ...prevFilters,
+                fechaFin: e.target.value,
+              }));
+              setPaginaActual(1); // Reiniciar a la primera página
+            }}
+            style={{
+              borderRadius: "10px",
+              padding: "5px",
+              width: "150px",
+            }}
+          />
+        </div>
       </div>
       {/* Filtros dinámicos */}
       <div className="row mb-4">
@@ -151,14 +250,26 @@ const TablaSeleccionActivos = ({
           </div>
         ))}
       </div>
-      <input
-        type="checkbox"
-        onChange={(e) => selectAllActivos(e.target.checked)}
-        checked={
-          selectedActivos.length === activos.length && activos.length > 0
-        }
-      />
-      Seleccionar Todos
+      {/* Checkbox de selección y tabla */}
+      <div className="d-flex align-items-center mb-4 gap-3">
+        {/* Checkbox de selección */}
+        <input
+          type="checkbox"
+          onChange={(e) => selectAllActivos(e.target.checked)}
+          checked={
+            selectedActivos.length === activos.length && activos.length > 0
+          }
+        />
+        Seleccionar Todos
+        {/* Botón Limpiar Filtros */}
+        <button
+          type="button"
+          onClick={handleLimpiarFiltros}
+          className="btn btn-danger ms-auto"
+        >
+          Limpiar Filtros
+        </button>
+      </div>
       <div
         style={{
           maxHeight: "800px",
@@ -166,6 +277,7 @@ const TablaSeleccionActivos = ({
           border: "1px solid #ddd",
           borderRadius: "5px",
           padding: "10px",
+          marginTop: "10px",
         }}
       >
         <table

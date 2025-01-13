@@ -6,6 +6,7 @@ import { parseJwt } from "../MAIN/Main";
 import ExcelReader from "../Components/ExcelReader";
 import { useRef } from "react";
 import MantenimientosPrincipal from "../Components/MantenimientosPrincipal";
+import ReportesGestion from "../Components/ReportesGestion";
 
 const Home = () => {
   const [vistaActual, setVistaActual] = useState("mantenimientos"); // Estado para manejar la vista actual
@@ -13,7 +14,7 @@ const Home = () => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false); // Estado para mostrar el formulario
   const [activos, setActivos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
-  const elementosPorPagina = 7; // Número de elementos por página
+  const elementosPorPagina = 6; // Número de elementos por página
   const [username, setUsername] = useState("");
   const [rol, setRol] = useState("");
   const [activoSeleccionado, setActivoSeleccionado] = useState(null); // Activo seleccionado para editar
@@ -129,37 +130,72 @@ const Home = () => {
   };
   return (
     <>
+      {/* Encabezado */}
       <div
         style={{
           backgroundColor: "rgb(163, 33, 38)",
           color: "white",
-          height: "60px", // Reducir altura
-          padding: "10px 20px", // Ajustar padding
+          height: "100px",
+          padding: "10px 20px",
         }}
         className="d-flex justify-content-between align-items-center"
       >
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-center gap-3">
+          {/* Botón Mantenimientos */}
           <button
-            onClick={() =>
-              vistaActual === "inicio"
-                ? cambiarAVista("mantenimientos")
-                : cambiarAVista("inicio")
-            }
             className="btn"
+            onClick={() => cambiarAVista("mantenimientos")}
             style={{
-              backgroundColor: rol === "admin" ? "white" : "gray", // Color gris para laboratorista
-              color: rol === "admin" ? "black" : "white", // Texto gris si es laboratorista
-              cursor: rol === "admin" ? "pointer" : "not-allowed",
+              backgroundColor:
+                vistaActual === "mantenimientos" ? "white" : "white",
+              color: vistaActual === "mantenimientos" ? "black" : "black",
               borderRadius: "35px",
-              fontSize: "18px", // Reducir tamaño de texto
-              padding: "5px 15px", // Reducir padding
-              fontWeight: "bold",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "mantenimientos" ? "bold" : "normal",
             }}
-            disabled={rol !== "admin"} // Desactivar el botón si no es admin
           >
-            {vistaActual === "inicio" ? "Mantenimientos" : "Activos"}
+            Mantenimientos
+          </button>
+          {/* Botón Inicio */}
+          <button
+            className="btn"
+            onClick={() => cambiarAVista("inicio")}
+            style={{
+              backgroundColor: vistaActual === "inicio" ? "white" : "white",
+              color: vistaActual === "inicio" ? "black" : "black",
+              borderRadius: "35px",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "inicio" ? "bold" : "normal",
+            }}
+          >
+            Activos
+          </button>
+
+          {/* Botón Reportes de Gestión */}
+          <button
+            className="btn"
+            onClick={() => cambiarAVista("reportesGestion")}
+            style={{
+              backgroundColor:
+                vistaActual === "reportesGestion" ? "white" : "white",
+              color: vistaActual === "reportesGestion" ? "black" : "black",
+              borderRadius: "35px",
+              fontSize: "20px",
+              padding: "10px 20px",
+              fontWeight: vistaActual === "reportesGestion" ? "bold" : "normal",
+              cursor: rol === "admin" ? "pointer" : "not-allowed",
+              opacity: rol === "admin" ? 1 : 0.6,
+              pointerEvents: rol === "admin" ? "auto" : "none",
+            }}
+            disabled={rol !== "admin"} // Deshabilitado si no es admin
+          >
+            Reportes de Gestión
           </button>
         </div>
+
+        {/* Botón Cerrar Sesión */}
         <div className="d-flex align-items-center">
           <button
             className="btn text-white d-flex align-items-center"
@@ -168,7 +204,7 @@ const Home = () => {
             <img
               src="/SESION CERR.png"
               alt="Cerrar Sesión"
-              style={{ width: "40px", height: "40px", marginRight: "8px" }} // Reducir tamaño de icono
+              style={{ width: "40px", height: "40px", marginRight: "8px" }}
             />
             Cerrar Sesión
           </button>
@@ -190,14 +226,14 @@ const Home = () => {
               {/* Reducir espacio entre botones */}
               <button
                 className="btn"
-                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white", borderRadius:"20px", padding:"10px 20px"}}
                 onClick={handleRegistroIndividual}
               >
                 Registro Individual
               </button>
               <button
                 className="btn"
-                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white",borderRadius:"20px", padding:"10px 20px" }}
                 onClick={handleButtonClick}
               >
                 Registro por Lotes
@@ -302,6 +338,7 @@ const Home = () => {
           </>
         )}
         {vistaActual === "mantenimientos" && <MantenimientosPrincipal />}
+        {vistaActual === "reportesGestion" && <ReportesGestion />}
       </div>
     </>
   );

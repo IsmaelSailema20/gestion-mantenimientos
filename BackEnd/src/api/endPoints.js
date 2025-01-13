@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const { ping } = require('../controllers/pingController.js');
 const { login } = require('../controllers/loginController.js');
 const { getActivos } = require('../controllers/home.Controlers.js');
@@ -30,6 +29,10 @@ const { guardarcomponentes } = require("../controllers/guardarcomponentes");
 const { actividadesPorMantenimiento } = require("../controllers/actividadesPorMantenimiento");
 const { finalizarmantenimientototal } = require("../controllers/finalizarmantenimientototal");
 const { getModelosInfo } = require('../controllers/modelosInfoController.js');
+const {getActividades} = require("../controllers/FiltrosReportesControllers");
+const {getEncargados} = require("../controllers/FiltrosReportesControllers");
+const {getTiposMantenimientos} = require("../controllers/FiltrosReportesControllers");
+const {getClases} = require("../controllers/FiltrosReportesControllers");
 
 //RUTAS PARA FILTROS
 const {ubicacionesParaFiltro} = require('../controllers/ubicacionesParaFiltro.js');
@@ -39,7 +42,14 @@ const {actividadesRealizadas}= require('../controllers/actividadesRealizadas.js'
 const {componentesSeleccionados}= require('../controllers/componentesSeleccionados.js');
 const {actividadesPorActivo}= require('../controllers/actividadesPorActivo.js');
 
-actividadesPorActivo
+//COMPONENTES ACTIVOS
+const { componentesActivos } = require("../controllers/componentesActivos");
+
+//GRAFICOS
+const {frecuenciaMantenimientos} = require("../controllers/Graficos/frecuencia_mantenimientos");
+const {getTiposMantenimientosPorMes} = require("../controllers/Graficos/TipoMantenimientosPorMes");
+const {mantenimientosPorAnio} = require("../controllers/Graficos/mantenimientosPorAnio");
+const {encargadoMantenimientoAño} = require("../controllers/Graficos/encargadoMantenimientoAño");
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -76,6 +86,19 @@ router.post('/actividadesRealizadas', actividadesRealizadas);
 router.post('/componentesSeleccionados', componentesSeleccionados);
 router.post('/actividadesPorActivo', actividadesPorActivo);
 
-componentesSeleccionados
+
+router.get("/componentes/:id_activo", componentesActivos);
+
+router.get('/actividades', getActividades);
+router.get('/encargados', getEncargados);
+router.get('/tiposMantenimientos', getTiposMantenimientos);
+router.get('/clases', getClases);
+
+
+//GRAFICOS
+router.get("/frecuencia_mantenimientos/:id_activo", frecuenciaMantenimientos);
+router.get("/tipos_mantenimientos_mes/:id_activo", getTiposMantenimientosPorMes);
+router.get("/mantenimientos_por_anio/:id_activo", mantenimientosPorAnio);
+router.get("/mantenimientos_empresa_laboratorista/:id_activo",encargadoMantenimientoAño)
 module.exports = router;
 
