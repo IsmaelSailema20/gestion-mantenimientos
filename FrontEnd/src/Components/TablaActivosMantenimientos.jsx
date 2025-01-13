@@ -1,6 +1,7 @@
 import axios from "axios";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
+import Checkbox from "./checkbox"; // Ajusta la ruta según la ubicación de tu archivo
 
 const TablaSeleccionActivos = ({
   activos,
@@ -253,8 +254,7 @@ const TablaSeleccionActivos = ({
       {/* Checkbox de selección y tabla */}
       <div className="d-flex align-items-center mb-4 gap-3">
         {/* Checkbox de selección */}
-        <input
-          type="checkbox"
+        <Checkbox
           onChange={(e) => selectAllActivos(e.target.checked)}
           checked={
             selectedActivos.length === activos.length && activos.length > 0

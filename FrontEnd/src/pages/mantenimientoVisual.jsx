@@ -10,11 +10,12 @@ import ActividadesPorMantenimiento from "../Components/actMantenimiento"; // Aju
 import { useLocation } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ListaActividad from "../Components/detalleActMantenimiento";
+import CuadroConf from "../Components/cuadroConfirmacion";
 function MantenimientoVisual() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mantenimiento, setMantenimiento] = useState(
-    location.state?.mantenimiento || {}
+    location.state?.mantenimiento || JSON.parse( localStorage.getItem('mantenimiento'))
   );
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
 
@@ -29,6 +30,7 @@ function MantenimientoVisual() {
   const [mostrarAgregarActividad, setMostrarAgregarActividad] = useState(false);
   const [error, setError] = useState(null);
   const [mostrarListaActividad, setMostrarListaActividad] = useState(false);
+  const [mostrarCuadroConf, setmostrarCuadroConf] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
@@ -46,11 +48,16 @@ function MantenimientoVisual() {
       );
       if (savedMantenimiento) {
         setMantenimiento(savedMantenimiento);
+        console.log(mantenimiento)
+        console.log(mantenimiento.inicio);
+        setFechaInicio(mantenimiento?.inicio);
+ 
       } else {
         console.error("No se encontraron datos de mantenimiento.");
-        navigate("/"); // Redirige al usuario si no hay datos.
+        navigate("/"); 
       }
     } else {
+      console.log(mantenimiento);
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
     const fetchActivos = async () => {
@@ -105,6 +112,14 @@ function MantenimientoVisual() {
     console.log("ID del activo:", idActivo);
     setMostrarAgregarActividad(true);
     setActivoSeleccionado(idActivo);
+  };
+  const mostrarCuadro = (idActivo) => {
+    console.log("ID del activo:", idActivo);
+    setmostrarCuadroConf(true);
+    setActivoSeleccionado(idActivo);
+  };
+  const cerrarCuadro = () => {
+    setmostrarCuadroConf(false);
   };
 
   const cerrarAgregarActividad = () => {
@@ -170,6 +185,47 @@ function MantenimientoVisual() {
       console.error("Error al finalizar el mantenimiento:", err);
       alert("Hubo un error al finalizar el mantenimiento.");
     }
+  };
+
+  const confirmEliminacion = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/eliminarActivoDeMantenimiento",
+        {
+          id: activoSeleccionado,
+        }
+      );
+      console.log(response);
+      if (response.data === "Éxito") {
+        setModalData({
+          titulo: "Activo eliminado",
+          mensaje: "El activo y sus actividades se eliminaron con éxito.",
+        });
+        setShowModal(true);
+
+        setTimeout(() => {
+          setShowModal(false);
+          window.location.reload();
+        }, 3000);
+        setActivos((prevActivos) =>
+          prevActivos.filter((activo) => activo.id !== id)
+        );
+      } else {
+        setModalDataError({
+          titulo: "Error al eliminar activo",
+          mensaje:
+            "No se pudo eliminar el activo, por favor intenta mas tarde ",
+        });
+        setShowModalError(true);
+        setTimeout(() => {
+          setShowModalError(false);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Error al finalizar el mantenimiento total:", err);
+      alert("Hubo un error al finalizar el mantenimiento total.");
+    }
+    cerrarCuadro();
   };
 
   const finalizarMantenimientoTotal = async () => {
@@ -417,7 +473,7 @@ function MantenimientoVisual() {
                     <td>{activo.id_activo}</td>
                     <td>{activo.numero_serie}</td>
                     <td>{activo.tipo_activo}</td>
-                    <td>{activo.estado_mantenimiento}</td>
+                    <td>{activo.estado_mantenimiento.toUpperCase()}</td>
                     <td>
                       {activo.estado_mantenimiento === "en proceso" && (
                         <>
@@ -445,7 +501,7 @@ function MantenimientoVisual() {
                               color: "rgb(200, 0, 0)",
                               cursor: "pointer",
                             }}
-                            onClick={() => console.log("Eliminar", activo)}
+                            onClick={() => mostrarCuadro(activo)}
                           ></i>
                         </>
                       )}
@@ -578,6 +634,57 @@ function MantenimientoVisual() {
           </div>
         </>
       )}
+      {mostrarCuadroConf && (
+        <>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.68)",
+              zIndex: 1040,
+              display: "flex", // Centrar contenido
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {/* Modal */}
+            <div
+              className="modal-dialog"
+              style={{
+                width: "auto",
+                maxWidth: "100%",
+                margin: "1.75rem auto",
+              }}
+            >
+              <div
+                className="modal-content"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "1rem",
+                }}
+              >
+                <CuadroConf
+                  title="¿Estás seguro de que deseas eliminar este activo?"
+                  message=" Esta acción eliminará el activo y actividades asociadas a el 
+             permanentemente de este mantenimiento . 
+            ¿Estás seguro de continuar?"
+                  ConfirmText="Eliminar"
+                  cancelText="Cancel"
+                  closeModal={cerrarCuadro}
+                  onConfirm={confirmEliminacion} // Pasar la función al hijo
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {showModal && (
         <SuccessModal
           titulo={modalData.titulo}
