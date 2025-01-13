@@ -8,7 +8,8 @@ import ErrorModal from "../Components/ErrorModal";
 import { useNavigate } from "react-router-dom";
 import ActividadesPorMantenimiento from "../Components/actMantenimiento"; // Ajusta la ruta según la ubicación real
 import { useLocation } from "react-router-dom";
-
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import ListaActividad from "../Components/detalleActMantenimiento";
 function MantenimientoVisual() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ function MantenimientoVisual() {
   const [mostrarTablaAgregar, setMostrarTablaAgregar] = useState(false);
   const [mostrarAgregarActividad, setMostrarAgregarActividad] = useState(false);
   const [error, setError] = useState(null);
+  const [mostrarListaActividad, setMostrarListaActividad] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
@@ -82,7 +84,7 @@ function MantenimientoVisual() {
       }
     };
 */
-  //  consultarMantenimiento();
+    //  consultarMantenimiento();
     fetchActivos();
   }, [id]);
 
@@ -99,11 +101,23 @@ function MantenimientoVisual() {
     setMostrarAgregarActividad(true);
     setActivoSeleccionado(idActivo);
   };
+  const verActividades = (idActivo) => {
+    console.log("ID del activo:", idActivo);
+    setMostrarAgregarActividad(true);
+    setActivoSeleccionado(idActivo);
+  };
 
   const cerrarAgregarActividad = () => {
     setMostrarAgregarActividad(false);
   };
-
+  const verListaActividades = (idActivo) => {
+    console.log("ID del activo:", idActivo);
+    setMostrarListaActividad(true);
+    setActivoSeleccionado(idActivo);
+  };
+  const cerrarListaActividad = () => {
+    setMostrarListaActividad(false);
+  };
   const handleSelectActivo = (activoSeleccionado) => {
     setSelectedActivos((prevSelected) =>
       prevSelected.some(
@@ -237,6 +251,11 @@ function MantenimientoVisual() {
         <div className="d-flex align-items-center">
           <button></button>
         </div>
+        <h2
+          style={{ textAlign: "center", color: "White", marginBottom: "2,5px" }}
+        >
+          MANTENIMIENTO N° {id}
+        </h2>
         <div className="d-flex align-items-center">
           <button
             className="btn text-white d-flex align-items-center"
@@ -271,11 +290,6 @@ function MantenimientoVisual() {
         Volver
       </button>
       <div style={{ padding: "20px", backgroundColor: "", color: "black" }}>
-        <h2
-          style={{ textAlign: "center", color: "black", marginBottom: "20px" }}
-        >
-          MANTENIMIENTO N° {id}
-        </h2>
         <div
           style={{
             display: "flex",
@@ -345,8 +359,14 @@ function MantenimientoVisual() {
         </div>
       </div>
 
-      <div style={{ margin: "20px auto", maxWidth: "80%" }}>
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+      <div style={{ margin: "20px auto", maxWidth: "80%", marginTop: "-10px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+            alignItems: "center",
+          }}
+        >
           <button
             onClick={agregarActivos}
             className="btn"
@@ -359,141 +379,205 @@ function MantenimientoVisual() {
           >
             Agregar Activos
           </button>
-
-          {/** * <button
-            onClick={finalizarMantenimientoTotal}
-            className="btn"
-            style={{
-              backgroundColor: "rgb(163, 33, 38)",
-              color: "white",
-              marginRight: "10px",
-            }}
-            disabled={isDisabled}
-          >
-            Finalizar Mantenimiento
-          </button>
-          */}
         </div>
-        <table
-          className="table-bordered"
+
+        <div
           style={{
-            border: "2px solid black",
-            width: "100%",
-            margin: "auto",
+            maxHeight: "300px",
+            overflowY: "auto",
           }}
         >
-          <thead
-            style={{
-              backgroundColor: "#921c21",
-              color: "white",
-              textAlign: "center",
-            }}
+          <table
+            className="table-bordered"
+            style={{ border: "2px solid black", width: "100%" }}
           >
-            <tr>
-              {/* <th scope="col">Seleccionar</th>*/}
-              <th scope="col">ID Activo</th>
-              <th scope="col">Número de Serie</th>
-              <th scope="col">Tipo de Activo</th>
-              <th scope="col">Estado Mantenimiento</th>
-              <th scope="col">Acciones</th>
-            </tr>
-          </thead>
-          <tbody style={{ textAlign: "center" }}>
-            {activos.length > 0 ? (
-              activos.map((activo) => (
-                <tr key={activo.id_activo}>
-                  {/** <td>
-                    <input
-                      type="checkbox"
-                      disabled={
-                        isDisabled ||
-                        activo.estado_mantenimiento === "finalizado"
-                      }
-                      checked={selectedActivos.some(
-                        (selected) => selected.id_activo === activo.id_activo
+            <thead
+              style={{
+                backgroundColor: "#a32126",
+                height: "50px",
+                color: "white",
+                textAlign: "center",
+                position: "sticky",
+                top: 0,
+                zIndex: 1, // Asegura que el encabezado quede encima de las filas al hacer scroll
+              }}
+            >
+              <tr>
+                <th scope="col">ID Activo</th>
+                <th scope="col">Número de Serie</th>
+                <th scope="col">Tipo de Activo</th>
+                <th scope="col">Estado Mantenimiento</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody style={{ textAlign: "center" }}>
+              {activos.length > 0 ? (
+                activos.map((activo) => (
+                  <tr style={{ height: "45px" }} key={activo.id_activo}>
+                    <td>{activo.id_activo}</td>
+                    <td>{activo.numero_serie}</td>
+                    <td>{activo.tipo_activo}</td>
+                    <td>{activo.estado_mantenimiento}</td>
+                    <td>
+                      {activo.estado_mantenimiento === "en proceso" && (
+                        <>
+                          <i
+                            className="fas fa-eye"
+                            style={{
+                              color: "rgb(50, 50, 50)",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}
+                            onClick={() => verListaActividades(activo)}
+                          ></i>
+                          <i
+                            className="fas fa-book"
+                            style={{
+                              color: "rgb(163, 33, 38)",
+                              cursor: "pointer",
+                              marginRight: "10px",
+                            }}
+                            onClick={() => agregarActividad(activo)}
+                          ></i>
+                          <i
+                            className="fas fa-trash"
+                            style={{
+                              color: "rgb(200, 0, 0)",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => console.log("Eliminar", activo)}
+                          ></i>
+                        </>
                       )}
-                      onChange={() => handleSelectActivo(activo)}
-                    />
-                  </td>
-            */}
-                  <td>{activo.id_activo}</td>
-                  <td>{activo.numero_serie}</td>
-                  <td>{activo.tipo_activo}</td>
-                  <td>{activo.estado_mantenimiento}</td>
-                  <td>
-                    {activo.estado_mantenimiento === "en proceso" && (
-                      <a
-                        onClick={() => agregarActividad(activo)}
-                        style={{
-                          color: "rgb(163, 33, 38)",
-                          cursor: "pointer",
-                          marginTop: "10px",
-                          textDecoration: "underline",
-                        }}
-                        href="#"
-                      >
-                        Agregar actividad
-                      </a>
-                    )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr style={{ height: "60px" }}>
+                  <td colSpan="9" className="text-center">
+                    No se encontraron activos asociados.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6">No se encontraron activos asociados.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {mostrarTablaAgregar && (
-        <div
-          className="modal fade show"
-          style={{ display: "block" }}
-          aria-labelledby="listadoActivosModal"
-          aria-hidden="true"
-        >
+        <>
           <div
-            className="modal-dialog"
-            style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.68)", // Fondo negro semi-transparente
+              zIndex: 1040, // Debe estar detrás del modal pero encima del contenido de la página
+            }}
+          ></div>
+
+          {/* Modal */}
+          <div
+            className="modal fade show"
+            style={{ display: "block", zIndex: 1050 }} // Asegura que el modal esté encima del overlay
+            aria-labelledby="agregarActividadModal"
+            aria-hidden="true"
           >
-            <div className="modal-content">
-              <div className="modal-body">
-                <ListadoActivo
-                  closeModal={cerrarListado}
-                  idMantenimiento={id}
-                />
+            <div
+              className="modal-dialog"
+              style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            >
+              <div className="modal-content">
+                <div className="modal-body">
+                  <ListadoActivo
+                    closeModal={cerrarListado}
+                    idMantenimiento={id}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {mostrarAgregarActividad && (
-        <div
-          className="modal fade show"
-          style={{ display: "block" }}
-          aria-labelledby="agregarActividadModal"
-          aria-hidden="true"
-        >
+        <>
           <div
-            className="modal-dialog"
-            style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.68)", // Fondo negro semi-transparente
+              zIndex: 1040, // Debe estar detrás del modal pero encima del contenido de la página
+            }}
+          ></div>
+
+          {/* Modal */}
+          <div
+            className="modal fade show"
+            style={{ display: "block", zIndex: 1050 }} // Asegura que el modal esté encima del overlay
+            aria-labelledby="agregarActividadModal"
+            aria-hidden="true"
           >
-            <div className="modal-content">
-              <div className="modal-body">
-                <AgregarActividad
-                  activosSeleccionados={activoSeleccionado}
-                  closeModal={cerrarAgregarActividad}
-                  idMantenimiento={id}
-                />
+            <div
+              className="modal-dialog"
+              style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            >
+              <div className="modal-content">
+                <div className="modal-body">
+                  <AgregarActividad
+                    activosSeleccionados={activoSeleccionado}
+                    closeModal={cerrarAgregarActividad}
+                    idMantenimiento={id}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
+      {mostrarListaActividad && (
+        <>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.68)", // Fondo negro semi-transparente
+              zIndex: 1040, // Debe estar detrás del modal pero encima del contenido de la página
+            }}
+          ></div>
+
+          {/* Modal */}
+          <div
+            className="modal fade show"
+            style={{ display: "block", zIndex: 1050 }} // Asegura que el modal esté encima del overlay
+            aria-labelledby="agregarActividadModal"
+            aria-hidden="true"
+          >
+            <div
+              className="modal-dialog"
+              style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+            >
+              <div className="modal-content">
+                <div className="modal-body">
+                  <ListaActividad
+                    activo={activoSeleccionado}
+                    closeModal={cerrarListaActividad}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       {showModal && (
         <SuccessModal
           titulo={modalData.titulo}

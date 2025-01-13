@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const { ping } = require('../controllers/pingController.js');
 const { login } = require('../controllers/loginController.js');
 const { getActivos } = require('../controllers/home.Controlers.js');
@@ -39,6 +38,9 @@ const {getClases} = require("../controllers/FiltrosReportesControllers");
 const {ubicacionesParaFiltro} = require('../controllers/ubicacionesParaFiltro.js');
 const {proveedoresParaFiltro} = require('../controllers/proveedoresParaFiltros.js');
 const {claseParaFiltro}= require('../controllers/claseActivoParaFiltro.js');
+const {actividadesRealizadas}= require('../controllers/actividadesRealizadas.js');
+const {componentesSeleccionados}= require('../controllers/componentesSeleccionados.js');
+const {actividadesPorActivo}= require('../controllers/actividadesPorActivo.js');
 
 //COMPONENTES ACTIVOS
 const { componentesActivos } = require("../controllers/componentesActivos");
@@ -80,6 +82,10 @@ router.get('/modelos-info', getModelosInfo); // Necesario para registrar por lot
 router.get('/ubicaciones-filtro', ubicacionesParaFiltro); //FILTRO DE UBICACIONES
 router.get('/proveedores-filtro', proveedoresParaFiltro); //FILTRO DE PROVEEDORES
 router.get('/clase-filtro', claseParaFiltro); //FILTRO DE PROVEEDORES
+router.post('/actividadesRealizadas', actividadesRealizadas);
+router.post('/componentesSeleccionados', componentesSeleccionados);
+router.post('/actividadesPorActivo', actividadesPorActivo);
+
 
 router.get("/componentes/:id_activo", componentesActivos);
 

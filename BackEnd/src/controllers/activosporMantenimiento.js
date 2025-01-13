@@ -14,10 +14,17 @@ module.exports.activosporMantenimiento = (req, res) => {
     m.fecha_fin,
     dm.id_detalle_mantenimiento as detalle_mantenimiento,
     mo.nombre as modelo,
-            ma.nombre as marca
+    ma.nombre as marca,
+    CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion
 
 FROM 
     activos a
+    JOIN 
+    Edificio_Laboratorio el ON a.id_ubicacion = el.id_laboratio_edificio
+     JOIN 
+    Edificios e ON el.id_edificio = e.id_edificio
+JOIN 
+    Laboratorios l ON el.id_laboratorio = l.id_laboratorio
 JOIN 
     modelos mo ON a.id_modelo = mo.id_modelo
 JOIN 
