@@ -147,8 +147,8 @@ const Home = () => {
             onClick={() => cambiarAVista("mantenimientos")}
             style={{
               backgroundColor:
-                vistaActual === "mantenimientos" ? "lightgray" : "white",
-              color: vistaActual === "mantenimientos" ? "black" : "gray",
+                vistaActual === "mantenimientos" ? "white" : "white",
+              color: vistaActual === "mantenimientos" ? "black" : "black",
               borderRadius: "35px",
               fontSize: "20px",
               padding: "10px 20px",
@@ -162,8 +162,8 @@ const Home = () => {
             className="btn"
             onClick={() => cambiarAVista("inicio")}
             style={{
-              backgroundColor: vistaActual === "inicio" ? "lightgray" : "white",
-              color: vistaActual === "inicio" ? "black" : "gray",
+              backgroundColor: vistaActual === "inicio" ? "white" : "white",
+              color: vistaActual === "inicio" ? "black" : "black",
               borderRadius: "35px",
               fontSize: "20px",
               padding: "10px 20px",
@@ -179,8 +179,8 @@ const Home = () => {
             onClick={() => cambiarAVista("reportesGestion")}
             style={{
               backgroundColor:
-                vistaActual === "reportesGestion" ? "lightgray" : "white",
-              color: vistaActual === "reportesGestion" ? "black" : "gray",
+                vistaActual === "reportesGestion" ? "white" : "white",
+              color: vistaActual === "reportesGestion" ? "black" : "black",
               borderRadius: "35px",
               fontSize: "20px",
               padding: "10px 20px",
@@ -226,14 +226,14 @@ const Home = () => {
               {/* Reducir espacio entre botones */}
               <button
                 className="btn"
-                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white", borderRadius:"20px", padding:"10px 20px"}}
                 onClick={handleRegistroIndividual}
               >
                 Registro Individual
               </button>
               <button
                 className="btn"
-                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white" }}
+                style={{ backgroundColor: "rgb(163, 33, 38)", color: "white",borderRadius:"20px", padding:"10px 20px" }}
                 onClick={handleButtonClick}
               >
                 Registro por Lotes
