@@ -1,8 +1,11 @@
 import PropTypes from "prop-types";
+import GenerarPDF from "./GenerarPDF";
+
 function capitalizeFirstLetter(str) {
   if (!str) return ""; // Manejar cadenas vacías
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
+
 const TablaActivos = ({ activos, onEdit }) => {
   return (
     <div className="table-responsive">
@@ -40,27 +43,36 @@ const TablaActivos = ({ activos, onEdit }) => {
                 <td>{activo.ubicacion}</td>
                 <td>{capitalizeFirstLetter(activo.estado)}</td>
                 <td className="text-center" style={{ padding: 0 }}>
-                  <button
-                    onClick={() => onEdit(activo)}
-                    className="d-flex align-items-center justify-content-center"
-                    style={{
-                      backgroundColor: "transparent",
-                      border: "none",
-                      padding: 0,
-                      width: "100%",
-                    }}
-                  >
-                    <img
-                      src="/actualizar.png"
-                      alt="Actualizar"
+                  <div className="d-flex justify-content-around mt-3 mb-3">
+                    {/* Botón Actualizar */}
+                    <button
+                      onClick={() => onEdit(activo)}
+                      className="d-flex flex-column align-items-center justify-content-center"
                       style={{
-                        width: "44px",
-                        height: "34px",
-                        marginRight: "8px",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        padding: 0,
+                        width: "100%",
                       }}
-                    />
-                    Actualizar
-                  </button>
+                    >
+                      <img
+                        src="/actualizar.png"
+                        alt="Actualizar"
+                        style={{
+                          width: "44px",
+                          height: "34px",
+                        }}
+                      />
+                      <span style={{ fontSize: "14px", marginTop: "5px" }}>
+                        Actualizar
+                      </span>
+                    </button>
+
+                    {/* Botón Informes */}
+                    {/* Gráfico y PDF */}
+
+                    <GenerarPDF activo={activo} />
+                  </div>
                 </td>
               </tr>
             ))
@@ -76,8 +88,24 @@ const TablaActivos = ({ activos, onEdit }) => {
     </div>
   );
 };
+
 TablaActivos.propTypes = {
-  activos: PropTypes.array.isRequired,
+  activos: PropTypes.arrayOf(
+    PropTypes.shape({
+      id_activo: PropTypes.number.isRequired,
+      numero_serie: PropTypes.string.isRequired,
+      nombre_activo: PropTypes.string.isRequired,
+      tipo_activo: PropTypes.string.isRequired,
+      estado: PropTypes.string.isRequired,
+      fecha_registro: PropTypes.string.isRequired,
+      ubicacion: PropTypes.string.isRequired,
+      laboratorista: PropTypes.string.isRequired,
+      nombre_marca: PropTypes.string.isRequired,
+      especificaciones: PropTypes.string,
+      observaciones: PropTypes.string,
+    })
+  ).isRequired,
   onEdit: PropTypes.func.isRequired,
 };
+
 export default TablaActivos;
