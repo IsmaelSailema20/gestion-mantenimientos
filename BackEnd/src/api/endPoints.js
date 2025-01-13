@@ -29,27 +29,33 @@ const { guardarcomponentes } = require("../controllers/guardarcomponentes");
 const { actividadesPorMantenimiento } = require("../controllers/actividadesPorMantenimiento");
 const { finalizarmantenimientototal } = require("../controllers/finalizarmantenimientototal");
 const { getModelosInfo } = require('../controllers/modelosInfoController.js');
-const {getActividades} = require("../controllers/FiltrosReportesControllers");
-const {getEncargados} = require("../controllers/FiltrosReportesControllers");
-const {getTiposMantenimientos} = require("../controllers/FiltrosReportesControllers");
-const {getClases} = require("../controllers/FiltrosReportesControllers");
+const { getActividades } = require("../controllers/FiltrosReportesControllers");
+const { getEncargados } = require("../controllers/FiltrosReportesControllers");
+const { getTiposMantenimientos } = require("../controllers/FiltrosReportesControllers");
+const { getClases } = require("../controllers/FiltrosReportesControllers");
 
 //RUTAS PARA FILTROS
-const {ubicacionesParaFiltro} = require('../controllers/ubicacionesParaFiltro.js');
-const {proveedoresParaFiltro} = require('../controllers/proveedoresParaFiltros.js');
-const {claseParaFiltro}= require('../controllers/claseActivoParaFiltro.js');
-const {actividadesRealizadas}= require('../controllers/actividadesRealizadas.js');
-const {componentesSeleccionados}= require('../controllers/componentesSeleccionados.js');
-const {actividadesPorActivo}= require('../controllers/actividadesPorActivo.js');
+const { ubicacionesParaFiltro } = require('../controllers/ubicacionesParaFiltro.js');
+const { proveedoresParaFiltro } = require('../controllers/proveedoresParaFiltros.js');
+const { claseParaFiltro } = require('../controllers/claseActivoParaFiltro.js');
+const { actividadesRealizadas } = require('../controllers/actividadesRealizadas.js');
+const { componentesSeleccionados } = require('../controllers/componentesSeleccionados.js');
+const { actividadesPorActivo } = require('../controllers/actividadesPorActivo.js');
 
 //COMPONENTES ACTIVOS
 const { componentesActivos } = require("../controllers/componentesActivos");
 
 //GRAFICOS
-const {frecuenciaMantenimientos} = require("../controllers/Graficos/frecuencia_mantenimientos");
-const {getTiposMantenimientosPorMes} = require("../controllers/Graficos/TipoMantenimientosPorMes");
-const {mantenimientosPorAnio} = require("../controllers/Graficos/mantenimientosPorAnio");
-const {encargadoMantenimientoAño} = require("../controllers/Graficos/encargadoMantenimientoAño");
+const { frecuenciaMantenimientos } = require("../controllers/Graficos/frecuencia_mantenimientos");
+const { getTiposMantenimientosPorMes } = require("../controllers/Graficos/TipoMantenimientosPorMes");
+const { mantenimientosPorAnio } = require("../controllers/Graficos/mantenimientosPorAnio");
+const { encargadoMantenimientoAño } = require("../controllers/Graficos/encargadoMantenimientoAño");
+
+
+
+const { eliminarActivoDeMantenimiento } = require("../controllers/eliminarActivoDeMantenimiento");
+
+
 router.get('/activos', getActivos);
 router.get('/ping', ping);
 router.post('/login', login);
@@ -85,6 +91,7 @@ router.get('/clase-filtro', claseParaFiltro); //FILTRO DE PROVEEDORES
 router.post('/actividadesRealizadas', actividadesRealizadas);
 router.post('/componentesSeleccionados', componentesSeleccionados);
 router.post('/actividadesPorActivo', actividadesPorActivo);
+router.post('/eliminarActivoDeMantenimiento', eliminarActivoDeMantenimiento);
 
 
 router.get("/componentes/:id_activo", componentesActivos);
@@ -99,6 +106,6 @@ router.get('/clases', getClases);
 router.get("/frecuencia_mantenimientos/:id_activo", frecuenciaMantenimientos);
 router.get("/tipos_mantenimientos_mes/:id_activo", getTiposMantenimientosPorMes);
 router.get("/mantenimientos_por_anio/:id_activo", mantenimientosPorAnio);
-router.get("/mantenimientos_empresa_laboratorista/:id_activo",encargadoMantenimientoAño)
+router.get("/mantenimientos_empresa_laboratorista/:id_activo", encargadoMantenimientoAño)
 module.exports = router;
 
