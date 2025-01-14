@@ -176,7 +176,7 @@ const GenerarPDF = ({ activo }) => {
           {/* Gráfico de Proporción de Mantenimientos */}
           <View style={styles.chartSection}>
             <Text style={styles.sectionTitle}>
-              Proporción de Mantenimientos ({currentYear})
+              Cantidad de Mantenimientos ({currentYear})
             </Text>
             <Text style={styles.textDescripcion}>
               Este gráfico muestra la cantidad total de mantenimientos
@@ -215,8 +215,8 @@ const GenerarPDF = ({ activo }) => {
               />
             ) : (
               <Text style={styles.noDataMessage}>
-                No hay datos disponibles para los mantenimientos en el año
-                actual.
+                No hay datos disponibles para mostrar el historial de los tipos
+                de mantenimientos.
               </Text>
             )}
           </View>
@@ -239,8 +239,8 @@ const GenerarPDF = ({ activo }) => {
               />
             ) : (
               <Text style={styles.noDataMessage}>
-                No hay datos disponibles para los mantenimientos en el año
-                actual.
+                No hay datos disponibles para el historial de los mantenimientos
+                dados por los laboratoristas o empresas
               </Text>
             )}
           </View>
@@ -278,7 +278,7 @@ const GenerarPDF = ({ activo }) => {
   );
 };
 
-const styles = StyleSheet.create({
+/*const styles = StyleSheet.create({
   page: { padding: 30, fontFamily: "Helvetica" },
   header: { marginBottom: 20, textAlign: "center" },
   title: { fontSize: 16, fontWeight: "bold", color: "#2c3e50" },
@@ -318,8 +318,80 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
+});*/
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontFamily: "Helvetica",
+    fontSize: 12,
+    lineHeight: 1.5,
+    color: "#2c3e50",
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#34495e",
+    textTransform: "uppercase",
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textTransform: "uppercase",
+    color: "#2c3e50",
+    borderBottom: "1px solid #ddd",
+    paddingBottom: 5,
+  },
+  detailRow: {
+    flexDirection: "row",
+    marginBottom: 5,
+    fontSize: 12,
+  },
+  label: {
+    width: "45%",
+    fontWeight: "bold",
+    color: "#34495e",
+  },
+  value: {
+    width: "65%",
+    color: "#7f8c8d",
+  },
+  textDescripcion: {
+    fontSize: 11,
+    marginBottom: 10,
+    textAlign: "justify",
+  },
+  chartSection: {
+    marginTop: 20,
+    textAlign: "center",
+    border: "1px solid #ddd",
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: "#f9f9f9",
+  },
+  chartImage: {
+    width: "100%",
+    height: 300,
+    marginTop: 10,
+  },
+  noDataMessage: {
+    fontSize: 12,
+    fontStyle: "italic",
+    color: "#e74c3c",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  footer: {
+    marginTop: 20,
+    fontSize: 10,
+    textAlign: "center",
+    color: "#95a5a6",
+  },
 });
-
 GenerarPDF.propTypes = {
   activo: PropTypes.shape({
     id_activo: PropTypes.number.isRequired,

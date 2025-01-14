@@ -50,11 +50,14 @@ const { frecuenciaMantenimientos } = require("../controllers/Graficos/frecuencia
 const { getTiposMantenimientosPorMes } = require("../controllers/Graficos/TipoMantenimientosPorMes");
 const { mantenimientosPorAnio } = require("../controllers/Graficos/mantenimientosPorAnio");
 const { encargadoMantenimientoAño } = require("../controllers/Graficos/encargadoMantenimientoAño");
-
+const {obtenerMantenimientosPorFiltros} = require("../controllers/GraficosGestion/GraficoDatosFiltrados");
+const {obtenerMantenimientosPorMes} = require("../controllers/GraficosGestion/obtenerMantenimientosPorMes");
+const {obtenerMantenimientosPorClase} = require("../controllers/GraficosGestion/MantenimientosPorClase");
+const {obtenerMantenimientosPorEncargado} = require("../controllers/GraficosGestion/MantenimientosPorEncargado");
+const {obtenerActividadesMantenimiento} = require("../controllers/GraficosGestion/ActividadesPorMantenimiento");
 
 
 const { eliminarActivoDeMantenimiento } = require("../controllers/eliminarActivoDeMantenimiento");
-
 
 router.get('/activos', getActivos);
 router.get('/ping', ping);
@@ -107,5 +110,10 @@ router.get("/frecuencia_mantenimientos/:id_activo", frecuenciaMantenimientos);
 router.get("/tipos_mantenimientos_mes/:id_activo", getTiposMantenimientosPorMes);
 router.get("/mantenimientos_por_anio/:id_activo", mantenimientosPorAnio);
 router.get("/mantenimientos_empresa_laboratorista/:id_activo", encargadoMantenimientoAño)
+router.post("/obtenerMantenimientosPorFiltros", obtenerMantenimientosPorFiltros);
+router.post("/obtenerMantenimientosPorMes", obtenerMantenimientosPorMes);
+router.post("/obtenerMantenimientosPorClase", obtenerMantenimientosPorClase);
+router.post("/obtenerMantenimientosPorEncargado", obtenerMantenimientosPorEncargado);
+router.post("/obtenerActividadesMantenimiento", obtenerActividadesMantenimiento);
 module.exports = router;
 
