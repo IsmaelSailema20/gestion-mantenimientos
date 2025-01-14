@@ -15,7 +15,8 @@ function MantenimientoVisual() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mantenimiento, setMantenimiento] = useState(
-    location.state?.mantenimiento || JSON.parse( localStorage.getItem('mantenimiento'))
+    location.state?.mantenimiento ||
+      JSON.parse(localStorage.getItem("mantenimiento"))
   );
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
 
@@ -48,13 +49,12 @@ function MantenimientoVisual() {
       );
       if (savedMantenimiento) {
         setMantenimiento(savedMantenimiento);
-        console.log(mantenimiento)
+        console.log(mantenimiento);
         console.log(mantenimiento.inicio);
         setFechaInicio(mantenimiento?.inicio);
- 
       } else {
         console.error("No se encontraron datos de mantenimiento.");
-        navigate("/"); 
+        navigate("/");
       }
     } else {
       console.log(mantenimiento);
@@ -475,36 +475,38 @@ function MantenimientoVisual() {
                     <td>{activo.tipo_activo}</td>
                     <td>{activo.estado_mantenimiento.toUpperCase()}</td>
                     <td>
-                      {activo.estado_mantenimiento === "en proceso" && (
-                        <>
-                          <i
-                            className="fas fa-eye"
-                            style={{
-                              color: "rgb(50, 50, 50)",
-                              cursor: "pointer",
-                              marginRight: "10px",
-                            }}
-                            onClick={() => verListaActividades(activo)}
-                          ></i>
-                          <i
-                            className="fas fa-book"
-                            style={{
-                              color: "rgb(163, 33, 38)",
-                              cursor: "pointer",
-                              marginRight: "10px",
-                            }}
-                            onClick={() => agregarActividad(activo)}
-                          ></i>
-                          <i
-                            className="fas fa-trash"
-                            style={{
-                              color: "rgb(200, 0, 0)",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => mostrarCuadro(activo)}
-                          ></i>
-                        </>
-                      )}
+                      <>
+                        <i
+                          className="fas fa-eye"
+                          style={{
+                            color: "rgb(50, 50, 50)",
+                            cursor: "pointer",
+                            marginRight: "10px",
+                          }}
+                          onClick={() => verListaActividades(activo)}
+                        ></i>
+                        {activo.estado_mantenimiento === "en proceso" && (
+                          <>
+                            <i
+                              className="fas fa-book"
+                              style={{
+                                color: "rgb(163, 33, 38)",
+                                cursor: "pointer",
+                                marginRight: "10px",
+                              }}
+                              onClick={() => agregarActividad(activo)}
+                            ></i>
+                            <i
+                              className="fas fa-trash"
+                              style={{
+                                color: "rgb(200, 0, 0)",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => mostrarCuadro(activo)}
+                            ></i>
+                          </>
+                        )}
+                      </>
                     </td>
                   </tr>
                 ))

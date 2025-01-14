@@ -52,8 +52,8 @@ function AgregarActividad({
           (actividad) => actividad.nombre === "Cambio de componentes"
         );
         if (tieneCambioDeComponentes) {
-          setshowComp("Cambio de componentes"); // Mostrar el formulario de componentes
-          await cargarComponentes(); // Cargar componentes desde el servidor
+          setshowComp("Cambio de componentes");
+          await cargarComponentes();
         }
         console.log("Actividades previas:", actividadesPrevias);
         console.log(actividadesDisponibles);
@@ -86,13 +86,11 @@ function AgregarActividad({
         );
         const componentesGuardados = response.data;
         setComponentesSeleccionados(componentesGuardados);
+        setshowComp("Cambio de componentes");
 
         const cmptotal = await axios.get("http://localhost:5000/componentes");
-        setshowComp("Cambio de componentes");
         setDatosComponentes(cmptotal.data);
-        console.log(cmptotal.data);
-       
-
+        console.log(datosComponentes);
         const categoriasDisponibles = Object.keys(cmptotal.data);
         setCategorias(categoriasDisponibles);
 
@@ -144,14 +142,35 @@ function AgregarActividad({
       }, 3000);
       return;
     }
-
+    if (!componentesSeleccionados || componentesSeleccionados.length === 0) {
+      setModalDataError({
+        titulo: "Error de Validación",
+        mensaje: "Debe seleccionar al menos un componente.",
+      });
+      setShowModalError(true);
+      setTimeout(() => {
+        setShowModalError(false);
+      }, 3000);
+      return;
+    }
     if (showComp === "Cambio de componentes") {
       try {
-        await axios.post("http://localhost:5000/guardarcomponentes", {
-          idActivo: activosSeleccionados.id_activo,
-          nuevosComponentes: componentesSeleccionados,
-          idMantenimiento: idMantenimiento,
-        });
+        const resCom = await axios.post(
+          "http://localhost:5000/guardarcomponentes",
+          {
+            idActivo: activosSeleccionados.id_activo,
+            nuevosComponentes: componentesSeleccionados,
+            idMantenimiento: idMantenimiento,
+          }
+        );
+        if (resCom.data.message === "Componentes actualizados exitosamente.") {
+        } else {
+          if (
+            resCom.data.message ===
+            "Todos los componentes ya están registrados en el historial."
+          ) {
+          }
+        }
       } catch (error) {
         console.error("Error al guardar componentes:", error);
         alert("Hubo un error al guardar los componentes.");
@@ -183,15 +202,31 @@ function AgregarActividad({
           closeModal();
         }, 3000);
       } else {
-        setModalDataError({
-          titulo: "Error al agregar la actividad",
-          mensaje: "No se pudo agregar la actividad.",
-        });
-        setShowModalError(true);
-        setTimeout(() => {
-          setShowModalError(false);
-          closeModal();
-        }, 3000);
+        if (
+          response.data.message ===
+          "Todas las actividades ya están registradas. No se realizaron inserciones."
+        ) {
+          setModalData({
+            titulo: "Actividad Agregada",
+            mensaje: "La actividad se agregó con éxito.",
+          });
+          setShowModal(true);
+
+          setTimeout(() => {
+            setShowModal(false);
+            closeModal();
+          }, 3000);
+        } else {
+          setModalDataError({
+            titulo: "Error al agregar la actividad",
+            mensaje: "No se pudo agregar la actividad.",
+          });
+          setShowModalError(true);
+          setTimeout(() => {
+            setShowModalError(false);
+            closeModal();
+          }, 3000);
+        }
       }
     } catch (err) {
       console.error("Error al agregar actividad:", err);
@@ -309,19 +344,53 @@ function AgregarActividad({
       setComponentes((prev) => [...prev, componente]);
     }
   };
+  const actualizarDatosComponentes = () => {
+    let datosActualizados = { ...datosComponentes };
+    componentesSeleccionados.forEach((componente) => {
+      const { id, categoria } = componente;
+      console.log("Componente actual:", componente);
+      const conteoActual = conteoCategorias[categoria] || 0;
+      setConteoCategorias((prev) => ({
+        ...prev,
+        [categoria]: conteoActual + 1,
+      }));
+      if (datosActualizados[categoria]) {
+        console.log(datosActualizados[categoria]);
+        datosActualizados[categoria] = datosActualizados[categoria].filter(
+          (item) => item.id !== id
+        );
+        console.log(datosActualizados[categoria]);
+      }
+    });
+    console.log("Datos actualizados:", datosActualizados);
+
+    setDatosComponentes(datosActualizados);
+  };
   const handleCategoriaChange = (e) => {
     const categoria = e.target.value; // Obtiene la categoría seleccionada
     setCategoriaSeleccionada(categoria); // Actualiza la categoría seleccionada
-
+    console.log(datosComponentes);
+    actualizarDatosComponentes();
+    const elegidos = componentesSeleccionados;
+    console.log(elegidos);
+    console.log(datosComponentes);
     // Filtra los componentes de la categoría seleccionada
     const componentesCategoria = datosComponentes[categoria] || [];
-    setComponentes(componentesCategoria); // Actualiza los componentes a mostrar
+    console.log(datosComponentes);
+    setComponentes(componentesCategoria);
+    // Actualiza los componentes a mostrar
   };
+  useEffect(() => {
+    if (categoriaSeleccionada) {
+      const componentesCategoria =
+        datosComponentes[categoriaSeleccionada] || [];
+      setComponentes(componentesCategoria);
+    }
+  }, [datosComponentes, categoriaSeleccionada]);
   const handleComponenteSelect = (e) => {
     const { value } = e.target;
     const categoria = categoriaSeleccionada;
 
-    // Verificar si ya se seleccionó un componente de esta categoría
     if (
       componentesSeleccionados[categoria] &&
       componentesSeleccionados[categoria] !== value
@@ -594,7 +663,7 @@ function AgregarActividad({
           marginBottom: "20px", // Ajusta el espaciado en la parte inferior si es necesario
         }}
       >
-        Agregar Actividades
+      Guardar Cambios
       </button>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {showModal && (
