@@ -25,7 +25,7 @@ module.exports.componentesSeleccionados = (req, res) => {
         const clasificarComponente = (nombre) => {
             const lowerNombre = nombre.toLowerCase();
 
-            if (lowerNombre.includes("procesador")) return "procesador";
+            if (lowerNombre.includes("procesador")) return "procesadores";
             if (lowerNombre.includes("ram")) return "ram";
             if (
                 lowerNombre.includes("disco") ||
@@ -34,10 +34,10 @@ module.exports.componentesSeleccionados = (req, res) => {
                 lowerNombre.includes("sólido") ||
                 lowerNombre.includes("duro")
             )
-                return "disco";
-            if (lowerNombre.includes("gráfica")) return "gráfica";
-            if (lowerNombre.includes("fuente")) return "fuente";
-            if (lowerNombre.includes("madre")) return "tarjeta madre";
+                return "discos";
+            if (lowerNombre.includes("gráfica")) return "graficas";
+            if (lowerNombre.includes("fuente")) return "fuentes";
+            if (lowerNombre.includes("madre")) return "tarjetasMadre";
             return "otros"; // Categoría por defecto si no coincide con ninguna
         };
 
