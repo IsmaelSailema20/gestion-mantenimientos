@@ -40,41 +40,73 @@ module.exports.insertarActividad = (req, res) => {
             }
 
             const idDetalleMantenimiento = results[0].id_detalle_mantenimiento;
-            const promises = idActividad.map((actividad) => {
-                return new Promise((resolve, reject) => {
-                    const queryInsertarActividad = `
-                        INSERT INTO actividades_mantenimiento (id_detalle_mantenimiento, tipo_actividad )
-                        VALUES (?, ?)
-                    `;
-                    connection.query(
-                        queryInsertarActividad,
-                        [idDetalleMantenimiento, actividad.id],
-                        (err, results) => {
-                            if (err) {
-                                console.error("Error al insertar actividad:", err);
-                                return reject(err);
+
+            // Paso 2: Consultar actividades existentes
+            const actividadIds = idActividad.map((actividad) => actividad.id);
+            const queryActividadesExistentes = `
+                SELECT tipo_actividad
+                FROM actividades_mantenimiento
+                WHERE id_detalle_mantenimiento = ? AND tipo_actividad IN (?)
+            `;
+
+            connection.query(queryActividadesExistentes, [idDetalleMantenimiento, actividadIds], (err, existingResults) => {
+                if (err) {
+                    console.error("Error al consultar actividades existentes:", err);
+                    return connection.rollback(() => {
+                        res.status(500).json({ error: "Error al verificar las actividades existentes." });
+                    });
+                }
+
+                // Filtrar actividades que no están en la tabla
+                const existingActivities = new Set(existingResults.map((row) => row.tipo_actividad));
+                const activitiesToInsert = idActividad.filter((actividad) => !existingActivities.has(actividad.id));
+
+                if (activitiesToInsert.length === 0) {
+                    return connection.rollback(() => {
+                        res.status(200).json({
+                            message: "Todas las actividades ya están registradas. No se realizaron inserciones.",
+                        });
+                    });
+                }
+
+                // Paso 3: Insertar las actividades que no existen
+                const promises = activitiesToInsert.map((actividad) => {
+                    return new Promise((resolve, reject) => {
+                        const queryInsertarActividad = `
+                            INSERT INTO actividades_mantenimiento (id_detalle_mantenimiento, tipo_actividad)
+                            VALUES (?, ?)
+                        `;
+                        connection.query(
+                            queryInsertarActividad,
+                            [idDetalleMantenimiento, actividad.id],
+                            (err, results) => {
+                                if (err) {
+                                    console.error("Error al insertar actividad:", err);
+                                    return reject(err);
+                                }
+                                resolve(results);
                             }
-                            resolve(results);
-                        }
-                    );
+                        );
+                    });
                 });
+
+                Promise.all(promises)
+                    .then(() => {
+                        connection.commit((err) => {
+                            if (err) {
+                                console.error("Error al confirmar transacción:", err);
+                                return res.status(500).json({ error: "Error al confirmar la transacción." });
+                            }
+                            res.status(200).json({ message: "Las actividades se agregaron con éxito al activo." });
+                        });
+                    })
+                    .catch((error) => {
+                        connection.rollback(() => {
+                            console.error("Error en la transacción, se realizó un rollback:", error);
+                            res.status(500).json({ error: "Error al agregar las actividades, se realizó un rollback." });
+                        });
+                    });
             });
-            Promise.all(promises)
-                .then(() => {
-                    connection.commit((err) => {
-                        if (err) {
-                            console.error("Error al confirmar transacción:", err);
-                            return res.status(500).json({ error: "Error al confirmar la transacción." });
-                        }
-                        res.status(200).json({ message: "Las actividades se agregaron con éxito al activo." });
-                    });
-                })
-                .catch((error) => {
-                    connection.rollback(() => {
-                        console.error("Error en la transacción, se realizó un rollback:", error);
-                        res.status(500).json({ error: "Error al agregar las actividades, se realizó un rollback." });
-                    });
-                });
         });
     });
 };

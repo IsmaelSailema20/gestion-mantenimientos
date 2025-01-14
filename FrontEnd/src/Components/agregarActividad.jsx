@@ -91,7 +91,6 @@ function AgregarActividad({
         setshowComp("Cambio de componentes");
         setDatosComponentes(cmptotal.data);
         console.log(cmptotal.data);
-       
 
         const categoriasDisponibles = Object.keys(cmptotal.data);
         setCategorias(categoriasDisponibles);
@@ -144,14 +143,35 @@ function AgregarActividad({
       }, 3000);
       return;
     }
-
+    if (!componentesSeleccionados || componentesSeleccionados.length === 0) {
+      setModalDataError({
+        titulo: "Error de Validación",
+        mensaje: "Debe seleccionar al menos un componente.",
+      });
+      setShowModalError(true);
+      setTimeout(() => {
+        setShowModalError(false);
+      }, 3000);
+      return;
+    }
     if (showComp === "Cambio de componentes") {
       try {
-        await axios.post("http://localhost:5000/guardarcomponentes", {
-          idActivo: activosSeleccionados.id_activo,
-          nuevosComponentes: componentesSeleccionados,
-          idMantenimiento: idMantenimiento,
-        });
+        const resCom = await axios.post(
+          "http://localhost:5000/guardarcomponentes",
+          {
+            idActivo: activosSeleccionados.id_activo,
+            nuevosComponentes: componentesSeleccionados,
+            idMantenimiento: idMantenimiento,
+          }
+        );
+        if (resCom.data.message === "Componentes actualizados exitosamente.") {
+        } else {
+          if (
+            resCom.data.message ===
+            "Todos los componentes ya están registrados en el historial."
+          ) {
+          }
+        }
       } catch (error) {
         console.error("Error al guardar componentes:", error);
         alert("Hubo un error al guardar los componentes.");
@@ -183,15 +203,31 @@ function AgregarActividad({
           closeModal();
         }, 3000);
       } else {
-        setModalDataError({
-          titulo: "Error al agregar la actividad",
-          mensaje: "No se pudo agregar la actividad.",
-        });
-        setShowModalError(true);
-        setTimeout(() => {
-          setShowModalError(false);
-          closeModal();
-        }, 3000);
+        if (
+          response.data.message ===
+          "Todas las actividades ya están registradas. No se realizaron inserciones."
+        ) {
+          setModalData({
+            titulo: "Actividad Agregada",
+            mensaje: "La actividad se agregó con éxito.",
+          });
+          setShowModal(true);
+
+          setTimeout(() => {
+            setShowModal(false);
+            closeModal();
+          }, 3000);
+        } else {
+          setModalDataError({
+            titulo: "Error al agregar la actividad",
+            mensaje: "No se pudo agregar la actividad.",
+          });
+          setShowModalError(true);
+          setTimeout(() => {
+            setShowModalError(false);
+            closeModal();
+          }, 3000);
+        }
       }
     } catch (err) {
       console.error("Error al agregar actividad:", err);

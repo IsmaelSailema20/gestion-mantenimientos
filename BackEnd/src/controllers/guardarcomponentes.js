@@ -8,8 +8,9 @@ module.exports.guardarcomponentes = (req, res) => {
       error: "Se requieren los IDs de los activos, el ID del mantenimiento y los componentes nuevos.",
     });
   }
+
   console.log(nuevosComponentes);
-  // Consulta para obtener id_detalle_mantenimiento
+
   const queryDetalleMantenimiento = `
     SELECT id_detalle_mantenimiento
     FROM detalle_mantenimiento
@@ -32,60 +33,77 @@ module.exports.guardarcomponentes = (req, res) => {
 
       const idDetalleMantenimiento = results[0].id_detalle_mantenimiento;
 
-      // Construir los datos para historial_componentes
-      const componentesData = nuevosComponentes.map((componente) => [
-        idDetalleMantenimiento, componente.id
-      ]);
-console.log(componentesData);
-      if (componentesData.length === 0) {
-        return res.status(400).json({ error: "No hay componentes válidos para insertar." });
-      }
+      // Consultar componentes ya existentes en historial_componentes
+      const historialQuery = `
+        SELECT componente_interno
+        FROM historial_componentes
+        WHERE id_detalle_mantenimiento = ? AND componente_interno IN (?)`;
 
-      // Eliminar componentes antiguos de la tabla activos_componentes
-      const deleteQuery = `
-        DELETE FROM activos_componentes
-        WHERE id_activo = ?`;
+      const componentesIds = nuevosComponentes.map((componente) => componente.id);
 
-      connection.query(deleteQuery, [idActivo], (error) => {
+      connection.query(historialQuery, [idDetalleMantenimiento, componentesIds], (error, historialResults) => {
         if (error) {
-          console.error("Error al eliminar componentes antiguos:", error);
-          return res.status(500).json({ error: "Error al eliminar componentes antiguos del activo." });
+          console.error("Error al consultar historial_componentes:", error);
+          return res.status(500).json({ error: "Error al consultar historial de componentes." });
         }
 
-        // Inserción en historial_componentes
-        const historialQuery = `
-          INSERT INTO historial_componentes (id_detalle_mantenimiento, componente_interno)
-          VALUES ?`;
+        // Filtrar componentes que no están en el historial
+        const existentes = historialResults.map((row) => row.componente_interno);
+        const componentesFiltrados = nuevosComponentes.filter(
+          (componente) => !existentes.includes(componente.id)
+        );
 
-        connection.query(historialQuery, [componentesData], (error) => {
+        if (componentesFiltrados.length === 0) {
+          console.log("Todos los componentes ya están registrados en el historial.");
+          return res.status(200).json({ error: "Todos los componentes ya están registrados en el historial." });
+        }
+
+        const componentesData = componentesFiltrados.map((componente) => [
+          idDetalleMantenimiento, componente.id,
+        ]);
+
+        console.log(componentesData);
+
+        // Eliminar componentes antiguos de la tabla activos_componentes
+        const deleteQuery = `
+          DELETE FROM activos_componentes
+          WHERE id_activo = ?`;
+
+        connection.query(deleteQuery, [idActivo], (error) => {
           if (error) {
-            console.error("Error al insertar en historial_componentes:", error);
-            return res.status(500).json({ error: "Error al guardar en historial de componentes." });
+            console.error("Error al eliminar componentes antiguos:", error);
+            return res.status(500).json({ error: "Error al eliminar componentes antiguos del activo." });
           }
 
-          // Construir los datos para activos_componentes
-          const activosComponentesData = nuevosComponentes.map((componente) => [
-            idActivo,
-            componente.id, // Extraer solo el id
-          ]);
-          
-
-          if (activosComponentesData.length === 0) {
-            return res.status(400).json({ error: "No hay componentes válidos para insertar en activos." });
-          }
-
-          // Inserción en activos_componentes
-          const activosComponentesQuery = `
-            INSERT INTO activos_componentes (id_activo, id_componente)
+          // Inserción en historial_componentes
+          const insertHistorialQuery = `
+            INSERT INTO historial_componentes (id_detalle_mantenimiento, componente_interno)
             VALUES ?`;
 
-          connection.query(activosComponentesQuery, [activosComponentesData], (error) => {
+          connection.query(insertHistorialQuery, [componentesData], (error) => {
             if (error) {
-              console.error("Error al insertar en activos_componentes:", error);
-              return res.status(500).json({ error: "Error al guardar componentes en el activo." });
+              console.error("Error al insertar en historial_componentes:", error);
+              return res.status(500).json({ error: "Error al guardar en historial de componentes." });
             }
 
-            res.status(200).json({ message: "Componentes actualizados exitosamente." });
+            // Construir los datos para activos_componentes
+            const activosComponentesData = componentesFiltrados.map((componente) => [
+              idActivo,
+              componente.id,
+            ]);
+
+            const insertActivosComponentesQuery = `
+              INSERT INTO activos_componentes (id_activo, id_componente)
+              VALUES ?`;
+
+            connection.query(insertActivosComponentesQuery, [activosComponentesData], (error) => {
+              if (error) {
+                console.error("Error al insertar en activos_componentes:", error);
+                return res.status(500).json({ error: "Error al guardar componentes en el activo." });
+              }
+
+              res.status(200).json({ message: "Componentes actualizados exitosamente." });
+            });
           });
         });
       });
