@@ -33,7 +33,7 @@ const { getActividades } = require("../controllers/FiltrosReportesControllers");
 const { getEncargados } = require("../controllers/FiltrosReportesControllers");
 const { getTiposMantenimientos } = require("../controllers/FiltrosReportesControllers");
 const { getClases } = require("../controllers/FiltrosReportesControllers");
-
+const {actualizarMantenimiento} = require("../controllers/actualizarMantenimiento");
 //RUTAS PARA FILTROS
 const { ubicacionesParaFiltro } = require('../controllers/ubicacionesParaFiltro.js');
 const { proveedoresParaFiltro } = require('../controllers/proveedoresParaFiltros.js');
@@ -103,7 +103,7 @@ router.get('/actividades', getActividades);
 router.get('/encargados', getEncargados);
 router.get('/tiposMantenimientos', getTiposMantenimientos);
 router.get('/clases', getClases);
-
+router.put("/mantenimientos/:id", actualizarMantenimiento);
 
 //GRAFICOS
 router.get("/frecuencia_mantenimientos/:id_activo", frecuenciaMantenimientos);

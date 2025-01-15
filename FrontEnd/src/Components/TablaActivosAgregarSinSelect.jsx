@@ -2,16 +2,15 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 
-const TablaSeleccionActivos1 = ({
+const TablaActivosDetalleMantenimiento = ({
   activos,
   columnas,
   filtrosConfig,
-  mostrarFiltros = true,
 }) => {
   const [filtrosSeleccionados, setFiltrosSeleccionados] = useState({});
-  const [activosFiltrados, setActivosFiltrados] = useState(activos || []);
+  const [activosFiltrados, setActivosFiltrados] = useState(activos);
   const [paginaActual, setPaginaActual] = useState(1);
-  const elementosPorPagina = 7; // Número de elementos por página
+  const elementosPorPagina = 5; // Número de elementos por página
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [filtrosData, setFiltrosData] = useState({});
 
@@ -41,6 +40,7 @@ const TablaSeleccionActivos1 = ({
       ...prev,
       [campo]: valor,
     }));
+    console.log(filtrosSeleccionados);
   };
 
   // Consultar datos para los filtros desde la base de datos
@@ -50,8 +50,10 @@ const TablaSeleccionActivos1 = ({
         const datos = {};
         for (const filtro of filtrosConfig) {
           if (filtro.options) {
+            // Si se proporcionan opciones estáticas, úsalas directamente
             datos[filtro.field] = filtro.options;
           } else if (filtro.apiEndpoint) {
+            // Si se proporciona un endpoint, realiza la consulta
             const response = await axios.get(filtro.apiEndpoint);
             datos[filtro.field] = response.data;
           }
@@ -66,11 +68,15 @@ const TablaSeleccionActivos1 = ({
 
   // Filtrar datos en base a los filtros seleccionados
   useEffect(() => {
-    let datosFiltrados = [...activos];
+    let datosFiltrados = [...activos]; // Aseguramos que estamos copiando el array y no modificando directamente
 
-    // Aplica cada filtro dinámico seleccionado
+    // Aplica cada filtro dinámico seleccionado (excluye fechas)
     for (const campo in filtrosSeleccionados) {
-      if (filtrosSeleccionados[campo]) {
+      if (
+        filtrosSeleccionados[campo] &&
+        campo !== "fechaInicio" &&
+        campo !== "fechaFin"
+      ) {
         datosFiltrados = datosFiltrados.filter(
           (activo) => activo[campo] === filtrosSeleccionados[campo]
         );
@@ -86,20 +92,78 @@ const TablaSeleccionActivos1 = ({
       );
     }
 
+    // Aplica los filtros de rango de fechas basado en fecha_registro
+    if (filtrosSeleccionados.fechaInicio) {
+      datosFiltrados = datosFiltrados.filter((activo) => {
+        if (!activo.fecha_registro) {
+          return false;
+        }
+
+        const fechaRegistro = new Date(activo.fecha_registro)
+          .toISOString()
+          .split("T")[0];
+
+        return fechaRegistro >= filtrosSeleccionados.fechaInicio;
+      });
+    }
+
+    if (filtrosSeleccionados.fechaFin) {
+      datosFiltrados = datosFiltrados.filter((activo) => {
+        if (!activo.fecha_registro) {
+          return false;
+        }
+
+        const fechaRegistro = new Date(activo.fecha_registro)
+          .toISOString()
+          .split("T")[0];
+        return fechaRegistro <= filtrosSeleccionados.fechaFin;
+      });
+    }
+
+    // Actualizamos los datos filtrados
     setActivosFiltrados(datosFiltrados);
     setPaginaActual(1); // Reiniciar a la primera página al aplicar filtros
   }, [filtrosSeleccionados, terminoBusqueda, activos]);
 
   const handleLimpiarFiltros = () => {
     setFiltrosSeleccionados({});
-    setTerminoBusqueda("");
-    setActivosFiltrados(activos);
-    setPaginaActual(1);
+    setTerminoBusqueda(""); // Limpia el término de búsqueda
+    setActivosFiltrados(activos); // Restablece los datos filtrados a los originales
+    setPaginaActual(1); // Reinicia a la primera página
   };
-
   return (
     <div>
-      {/* Input de búsqueda */}
+      {/* Input de búsqueda y filtros de fecha */}
+      <div className="d-flex align-items-center mb-2 gap-3 mt-4">
+        <h4
+          className="mb-4 w-100"
+          style={{ color: "#000000", fontWeight: "bold", textAlign: "center" }}
+        >
+          Lista de activos
+        </h4>
+      </div>
+      <div className="d-flex align-items-center mb-4 gap-3">
+        {/* Input de búsqueda */}
+      </div>
+      {/* Filtros dinámicos */}
+      <div className="row mb-4">
+        {filtrosConfig.map((filtro, index) => (
+          <div className="col-md-3" key={index}>
+            <select
+              className="form-control"
+              value={filtrosSeleccionados[filtro.field] || ""}
+              onChange={(e) => handleFiltroChange(filtro.field, e.target.value)}
+            >
+              <option value="">Seleccione {filtro.field}</option>
+              {(filtrosData[filtro.field] || []).map((opcion, idx) => (
+                <option key={idx} value={opcion}>
+                  {opcion}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
       <div className="d-flex align-items-center mb-4 gap-3">
         <div style={{ position: "relative", width: "250px" }}>
           <input
@@ -136,8 +200,6 @@ const TablaSeleccionActivos1 = ({
             />
           </button>
         </div>
-
-        {/* Botón Limpiar Filtros */}
         <button
           type="button"
           onClick={handleLimpiarFiltros}
@@ -146,28 +208,6 @@ const TablaSeleccionActivos1 = ({
           Limpiar Filtros
         </button>
       </div>
-
-      {/* Filtros dinámicos */}
-      <div className="row mb-4">
-        {filtrosConfig.map((filtro, index) => (
-          <div className="col-md-3" key={index}>
-            <select
-              className="form-control"
-              value={filtrosSeleccionados[filtro.field] || ""}
-              onChange={(e) => handleFiltroChange(filtro.field, e.target.value)}
-            >
-              <option value="">Seleccione {filtro.field}</option>
-              {(filtrosData[filtro.field] || []).map((opcion, idx) => (
-                <option key={idx} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
-      </div>
-
-      {/* Tabla */}
       <div
         style={{
           maxHeight: "800px",
@@ -198,9 +238,9 @@ const TablaSeleccionActivos1 = ({
             </tr>
           </thead>
           <tbody style={{ textAlign: "center" }}>
-            {Array.isArray(activosPaginados) && activosPaginados.length > 0 ? (
+            {activosPaginados.length > 0 ? (
               activosPaginados.map((activo) => (
-                <tr key={activo.id_activo}>
+                <tr key={activo.id_activo} style={{ height: "60px" }}>
                   {columnas.map((columna, index) => (
                     <td key={index}>{columna.render(activo)}</td>
                   ))}
@@ -209,7 +249,7 @@ const TablaSeleccionActivos1 = ({
             ) : (
               <tr>
                 <td
-                  colSpan={columnas.length}
+                  colSpan={columnas.length + 1}
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   No hay datos disponibles.
@@ -219,7 +259,6 @@ const TablaSeleccionActivos1 = ({
           </tbody>
         </table>
       </div>
-
       {/* Controles de paginación */}
       <div
         className="d-flex justify-content-between align-items-center mt-4"
@@ -249,4 +288,37 @@ const TablaSeleccionActivos1 = ({
   );
 };
 
-export default TablaSeleccionActivos1;
+TablaActivosDetalleMantenimiento.propTypes = {
+  activos: PropTypes.arrayOf(
+    PropTypes.shape({
+      id_activo: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
+      numero_serie: PropTypes.string.isRequired,
+      tipo_activo: PropTypes.string.isRequired,
+      tipo: PropTypes.string.isRequired,
+      estado: PropTypes.string.isRequired,
+      ubicacion: PropTypes.string.isRequired,
+      fecha_registro: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  selectedActivos: PropTypes.arrayOf(
+    PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  ),
+  handleSelectActivo: PropTypes.func.isRequired,
+  selectAllActivos: PropTypes.func.isRequired,
+  columnas: PropTypes.arrayOf(
+    PropTypes.shape({
+      header: PropTypes.string.isRequired,
+      render: PropTypes.func.isRequired,
+    })
+  ).isRequired,
+  filtrosConfig: PropTypes.arrayOf(
+    PropTypes.shape({
+      field: PropTypes.string.isRequired,
+      apiEndpoint: PropTypes.string,
+      options: PropTypes.arrayOf(PropTypes.string),
+    })
+  ).isRequired,
+};
+
+export default TablaActivosDetalleMantenimiento;

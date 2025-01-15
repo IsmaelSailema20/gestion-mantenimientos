@@ -15,6 +15,8 @@ module.exports.activosporMantenimiento = (req, res) => {
     dm.id_detalle_mantenimiento as detalle_mantenimiento,
     mo.nombre as modelo,
     ma.nombre as marca,
+    prov.nombre as proveedor,
+    ta.nombre as tipo_activo,
     CONCAT(e.nombre_edificio, '/', l.nombre_laboratorio) AS ubicacion
 
 FROM 
@@ -31,10 +33,12 @@ JOIN
     tipos_activo ta ON mo.id_tipo = ta.id_tipo
      join 
     marcas ma on mo.id_marca = ma.id_marca
+    JOIN proveedores prov ON prov.id_proveedor = a.id_proveedor
 LEFT JOIN 
     detalle_mantenimiento dm ON a.id_activo = dm.id_activo
 LEFT JOIN 
     mantenimientos m ON dm.id_mantenimiento = m.id_mantenimiento
+
 WHERE 
     dm.id_mantenimiento  = ?
   `;

@@ -11,7 +11,8 @@ import { useLocation } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ListaActividad from "../Components/detalleActMantenimiento";
 import CuadroConf from "../Components/cuadroConfirmacion";
-import TablaSeleccionActivos1 from "../Components/TablaActivosMantenimientos1";
+import TablaActivosMntenimientos from "../Components/TablaActivosMantenimientos";
+import TablaActivosDetalleMantenimiento from "../Components/TablaActivosAgregarSinSelect";
 
 function MantenimientoVisual() {
   const location = useLocation();
@@ -21,7 +22,7 @@ function MantenimientoVisual() {
       JSON.parse(localStorage.getItem("mantenimiento"))
   );
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
-
+  const [activosDispAgregar, setActivosDispAgregar] = useState([]);
   const [fechaInicio, setFechaInicio] = useState(mantenimiento?.inicio || "");
   const [fechaFin, setFechaFin] = useState(mantenimiento?.fin || "");
   const [tipo, setTipo] = useState(mantenimiento?.tipo || "preventivo");
@@ -34,8 +35,7 @@ function MantenimientoVisual() {
   const [error, setError] = useState(null);
   const [mostrarListaActividad, setMostrarListaActividad] = useState(false);
   const [mostrarCuadroConf, setmostrarCuadroConf] = useState(false);
-  const [activosFiltrados, setActivosFiltrados] = useState(activos || []);
-
+  const [modoEdicion, setModoEdicion] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
   const [showModalError, setShowModalError] = useState(false);
@@ -45,6 +45,18 @@ function MantenimientoVisual() {
   });
   const [isDisabled, setIsDisabled] = useState(false);
 
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/activos-disponibles")
+      .then((response) => setActivosDispAgregar(response.data))
+      .catch((err) => {
+        setModalDataError({
+          titulo: "Error al cargar activos",
+          mensaje: "No se pudo obtener la lista de activos disponibles.",
+        });
+        setShowModalError(true);
+      });
+  }, []);
   useEffect(() => {
     if (!mantenimiento?.numero) {
       const savedMantenimiento = JSON.parse(
@@ -63,13 +75,13 @@ function MantenimientoVisual() {
       console.log(mantenimiento);
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
-    if (!id) return;
     const fetchActivos = async () => {
       try {
         const response = await axios.post(
           "http://localhost:5000/activosporMantenimiento",
           { id }
         );
+
         setActivos(response.data);
       } catch (err) {
         console.error("Error al obtener los activos:", err);
@@ -98,25 +110,6 @@ function MantenimientoVisual() {
     //  consultarMantenimiento();
     fetchActivos();
   }, [id]);
-  const columnas = [
-    { header: "Código", render: (activo) => activo.codigo },
-    { header: "Tipo", render: (activo) => activo.tipo },
-    { header: "Clase", render: (activo) => activo.clase },
-    { header: "Fecha Registro", render: (activo) => activo.fecha_registro },
-    { header: "Ubicación", render: (activo) => activo.ubicacion },
-    { header: "Proveedor", render: (activo) => activo.proveedor },
-    {
-      header: "Acciones",
-      render: (activo) => (
-        <>
-          <button onClick={() => console.log("Ver", activo.codigo)}>👁️</button>
-          <button onClick={() => console.log("Eliminar", activo.codigo)}>
-            🗑️
-          </button>
-        </>
-      ),
-    },
-  ];
 
   const agregarActivos = () => {
     setMostrarTablaAgregar(true);
@@ -303,7 +296,7 @@ function MantenimientoVisual() {
   };
 
   const handlefechaFinChange = (e) => {
-    setfechaFin(e.target.value);
+    setFechaFin(e.target.value);
   };
 
   const handleTipoChange = (e) => {
@@ -315,6 +308,164 @@ function MantenimientoVisual() {
   const CerrarSesion = () => {
     localStorage.removeItem("token");
     navigate("/");
+  };
+  const selectAllActivos = (checked) => {
+    setSelectedActivos(
+      checked ? activos.map((activo) => activo.id_activo) : []
+    );
+  };
+
+  const columnas = [
+    { header: "Código", render: (activo) => activo.numero_serie },
+    { header: "Tipo", render: (activo) => activo.tipo },
+    {
+      header: "Fecha Registro",
+      render: (activo) =>
+        new Date(activo.fecha_registro).toISOString().split("T")[0],
+    },
+    { header: "Ubicación", render: (activo) => activo.ubicacion },
+    { header: "Proveedor", render: (activo) => activo.proveedor },
+    { header: "Clase", render: (activo) => activo.clase },
+  ];
+
+  const columnasDetalle = [
+    { header: "Código", render: (activo) => activo.numero_serie },
+    { header: "Tipo", render: (activo) => activo.tipo },
+    {
+      header: "Fecha Registro",
+      render: (activo) =>
+        new Date(activo.fecha_registro).toISOString().split("T")[0],
+    },
+    { header: "Ubicación", render: (activo) => activo.ubicacion },
+    { header: "Proveedor", render: (activo) => activo.proveedor },
+    { header: "Clase", render: (activo) => activo.tipo_activo },
+    {
+      header: "Acciones",
+      render: (activo) => (
+        <>
+          {/* Icono de visualización */}
+          <i
+            className="fas fa-eye"
+            style={{
+              color: "rgb(50, 50, 50)",
+              cursor: "pointer",
+              marginRight: "10px",
+            }}
+            onClick={() => verListaActividades(activo)}
+          ></i>
+
+          {/* Condicional para mostrar más íconos si el estado es "en proceso" */}
+          {activo.estado_mantenimiento === "en proceso" && (
+            <>
+              <i
+                className="fas fa-book"
+                style={{
+                  color: "rgb(163, 33, 38)",
+                  cursor: "pointer",
+                  marginRight: "10px",
+                }}
+                onClick={() => agregarActividad(activo)}
+              ></i>
+              <i
+                className="fas fa-trash"
+                style={{
+                  color: "rgb(200, 0, 0)",
+                  cursor: "pointer",
+                }}
+                onClick={() => mostrarCuadro(activo)}
+              ></i>
+            </>
+          )}
+        </>
+      ),
+    },
+  ];
+
+  const filtrosConfig = [
+    {
+      field: "ubicacion",
+      apiEndpoint: "http://localhost:5000/ubicaciones-filtro",
+    },
+    {
+      field: "tipo",
+      options: ["Informático", "No Informático"],
+    },
+    {
+      field: "proveedor",
+      apiEndpoint: "http://localhost:5000/proveedores-filtro",
+    },
+    {
+      field: "clase",
+      apiEndpoint: "http://localhost:5000/clase-filtro",
+    },
+  ];
+  const [encargados, setEncargados] = useState([]);
+  const [tipoEncargado, setTipoEncargado] = useState(
+    mantenimiento.cedula ? "laboratorista" : "externo"
+  );
+
+  // Cargar los encargados dependiendo del tipo seleccionado
+  useEffect(() => {
+    const url =
+      tipoEncargado === "laboratorista"
+        ? "http://localhost:5000/laboratoristas"
+        : "http://localhost:5000/empresas_mantenimientos";
+
+    axios
+      .get(url)
+      .then((response) => setEncargados(response.data))
+      .catch((err) => {
+        console.error("Error al cargar encargados:", err);
+      });
+  }, [tipoEncargado]); // Se ejecuta cuando cambia `tipoEncargado`
+
+  const toggleModoEdicion = () => {
+    setModoEdicion(!modoEdicion);
+  };
+
+  /*EDICION */
+
+  const [editableMantenimiento, setEditableMantenimiento] = useState({
+    ...mantenimiento,
+  }); // Estado local para los datos editables
+
+  const guardarCambios = async () => {
+    try {
+      // Construir el objeto con los datos actualizados
+      const datosActualizados = {
+        codigo: editableMantenimiento.codigo || null,
+        fechaInicio: editableMantenimiento.inicio || null,
+        fechaFin: editableMantenimiento.fin || null,
+        tipo: editableMantenimiento.tipo || null,
+        estado: editableMantenimiento.estado || null,
+        cedula: editableMantenimiento.cedula || null, // Si es laboratorista
+        ruc: editableMantenimiento.ruc || null, // Si es empresa
+        descripcion: editableMantenimiento.descripcion || null,
+      };
+
+      // Hacer la solicitud PUT al backend
+      const response = await axios.put(
+        `http://localhost:5000/mantenimientos/${editableMantenimiento.numero}`,
+        datosActualizados
+      );
+
+      // Mostrar mensaje de éxito
+      alert("Cambios guardados exitosamente.");
+      setModoEdicion(false); // Salir del modo edición
+    } catch (error) {
+      console.error("Error al guardar los cambios:", error);
+
+      // Mostrar mensaje de error
+      alert("Ocurrió un error al guardar los cambios.");
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditableMantenimiento((prev) => ({
+      ...prev,
+      [name]: value, // Actualiza el valor del campo editado
+    }));
   };
   return (
     <div>
@@ -368,77 +519,211 @@ function MantenimientoVisual() {
       >
         Volver
       </button>
-      <div style={{ padding: "20px", backgroundColor: "", color: "black" }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            margin: "20px 0",
-          }}
+      <div
+        className="container mt-4 p-4"
+        style={{ backgroundColor: "#f9f9f9", borderRadius: "10px" }}
+      >
+        <h4
+          className="mb-4 w-100"
+          style={{ color: "#000000", fontWeight: "bold", textAlign: "center" }}
         >
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Código mantenimiento:</label>
-            <p>{mantenimiento.codigo}</p>
+          Detalle de Mantenimiento
+        </h4>
+        {/* Toggle Switch y Botón Guardar Cambios */}
+        <div className="d-flex align-items-center mb-4">
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="modoEdicionToggle"
+              checked={modoEdicion} // Vinculado al estado
+              onChange={toggleModoEdicion} // Cambiar estado al activarlo/desactivarlo
+            />
+            <label
+              className="form-check-label ms-2"
+              htmlFor="modoEdicionToggle"
+            >
+              {modoEdicion
+                ? "Modo Edición Activado"
+                : "Modo Edición Desactivado"}
+            </label>
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Fecha Inicio:</label>
+          {modoEdicion && (
+            <button className="btn btn-success ms-3" onClick={guardarCambios}>
+              Guardar Cambios
+            </button>
+          )}
+        </div>
+
+        <div className="row gy-3">
+          {/* Código Mantenimiento */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Código mantenimiento:</label>
+            <p className="form-control bg-light">{mantenimiento.codigo}</p>
+          </div>
+
+          {/* Fecha Inicio */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Fecha Inicio:</label>
             <input
               type="date"
+              className="form-control"
               value={fechaInicio}
-              style={{ width: "100%" }}
               onChange={handleFechaInicioChange}
+              disabled={!modoEdicion}
             />
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Fecha Fin:</label>
+
+          {/* Fecha Fin */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Fecha Fin:</label>
             <input
               type="date"
+              className="form-control"
               value={fechaFin}
-              style={{ width: "100%" }}
               onChange={handlefechaFinChange}
+              disabled={!modoEdicion}
             />
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Tipo Mantenimiento:</label>
+
+          {/* Tipo Mantenimiento */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Tipo Mantenimiento:</label>
             <select
-              style={{ width: "100%" }}
+              className="form-select"
               value={tipo}
               onChange={handleTipoChange}
+              disabled={!modoEdicion}
             >
               <option value="preventivo">Preventivo</option>
               <option value="correctivo">Correctivo</option>
             </select>
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Entidad Encargada:</label>
-            <select style={{ width: "100%" }}>
+
+          {/* Entidad Encargada */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Entidad Encargada:</label>
+            <select
+              className="form-select"
+              value={tipoEncargado}
+              onChange={(e) => {
+                const nuevoTipo = e.target.value;
+                setTipoEncargado(nuevoTipo); // Actualiza el tipo de encargado
+                // Restablece el valor del responsable al cambiar de tipo
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  cedula: nuevoTipo === "laboratorista" ? "" : null,
+                  ruc: nuevoTipo === "externo" ? "" : null,
+                }));
+              }}
+              disabled={!modoEdicion}
+            >
               <option value="laboratorista">Laboratorista</option>
               <option value="externo">Externo</option>
             </select>
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Estado Mantenimiento:</label>
+
+          {/* Responsable */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Responsable:</label>
             <select
-              style={{ width: "100%" }}
-              value={estado}
-              onChange={handleEstadoChange}
+              className="form-select"
+              value={
+                tipoEncargado === "laboratorista"
+                  ? editableMantenimiento.cedula
+                  : editableMantenimiento.ruc || ""
+              }
+              onChange={(e) => {
+                const nuevoResponsable = e.target.value;
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  cedula:
+                    tipoEncargado === "laboratorista" ? nuevoResponsable : null,
+                  ruc: tipoEncargado === "externo" ? nuevoResponsable : null,
+                }));
+              }}
+              disabled={!modoEdicion}
+            >
+              <option value="" disabled>
+                Seleccione un responsable
+              </option>
+              {encargados.map((encargado) => (
+                <option
+                  key={encargado.id}
+                  value={encargado.cedula || encargado.ruc}
+                >
+                  {encargado.nombre} {encargado.apellido || ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Estado Mantenimiento */}
+          <div className="col-md-3">
+            <label className="form-label fw-bold">Estado Mantenimiento:</label>
+            <select
+              className="form-select"
+              value={editableMantenimiento.estado || ""} // Asegura que el valor esté sincronizado
+              onChange={(e) =>
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  estado: e.target.value, // Actualiza el estado
+                }))
+              }
+              disabled={!modoEdicion} // Deshabilitado si no está en modo edición
             >
               <option value="en_proceso">En Proceso</option>
               <option value="finalizado">Finalizado</option>
             </select>
           </div>
-          <div style={{ flex: "1", minWidth: "200px", marginBottom: "10px" }}>
-            <label style={{ fontWeight: "bold" }}>Responsable:</label>
-            <select style={{ width: "25%" }}>
-              <option value="luis_fernandez">Luis Fernandez</option>
-              <option value="ana_gomez">Ana Gomez</option>
-            </select>
+
+          {/* Descripción */}
+          <div className="col-md-12">
+            <label className="form-label fw-bold">Descripción:</label>
+            <textarea
+              className="form-control"
+              rows="3"
+              value={mantenimiento.descripcion || ""}
+              onChange={(e) =>
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  descripcion: e.target.value,
+                }))
+              }
+              disabled={!modoEdicion}
+            ></textarea>
           </div>
         </div>
       </div>
 
-      <div style={{ margin: "20px auto", maxWidth: "80%", marginTop: "-10px" }}>
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: "20px",
+          alignItems: "center",
+        }}
+      >
+        <button
+          onClick={agregarActivos}
+          className="btn"
+          style={{
+            backgroundColor: "rgb(163, 33, 38)",
+            color: "white",
+            marginRight: "10px",
+          }}
+          disabled={isDisabled}
+        >
+          Agregar Activos
+        </button>
+      </div>
+      <div style={{ width: "90%", margin: "auto", marginBottom: "40px" }}>
+        <TablaActivosDetalleMantenimiento
+          activos={activos}
+          columnas={columnasDetalle}
+          filtrosConfig={filtrosConfig}
+        ></TablaActivosDetalleMantenimiento>
+      </div>
+      {/*<div style={{ margin: "20px auto", maxWidth: "80%", marginTop: "-10px" }}>
         <div
           style={{
             textAlign: "center",
@@ -460,62 +745,90 @@ function MantenimientoVisual() {
           </button>
         </div>
 
-        <div style={{ maxHeight: "300px", 
-          overflowY: "auto" }}>
-          <TablaSeleccionActivos1
-            activos={activos || []}
-            columnas={[
-              { header: "Código", render: (activo) => activo.codigo },
-              { header: "Tipo", render: (activo) => activo.tipo },
-              { header: "Clase", render: (activo) => activo.clase },
-              {
-                header: "Fecha Registro",
-                render: (activo) => activo.fecha_registro,
-              },
-              { header: "Ubicación", render: (activo) => activo.ubicacion },
-              { header: "Proveedor", render: (activo) => activo.proveedor },
-              {
-                header: "Acciones",
-                render: (activo) => (
-                  <>
-                    <i
-                      className="fas fa-eye"
-                      style={{
-                        color: "rgb(50, 50, 50)",
-                        cursor: "pointer",
-                        marginRight: "10px",
-                      }}
-                      onClick={() => verListaActividades(activo)}
-                    ></i>
-                    {activo.estado_mantenimiento === "en proceso" && (
+        <div
+          style={{
+            maxHeight: "300px",
+            overflowY: "auto",
+          }}
+        >
+          <table
+            className="table-bordered"
+            style={{ border: "2px solid black", width: "100%" }}
+          >
+            <thead
+              style={{
+                backgroundColor: "#a32126",
+                height: "50px",
+                color: "white",
+                textAlign: "center",
+                position: "sticky",
+                top: 0,
+                zIndex: 1, // Asegura que el encabezado quede encima de las filas al hacer scroll
+              }}
+            >
+              <tr>
+                <th scope="col">ID Activo</th>
+                <th scope="col">Número de Serie</th>
+                <th scope="col">Tipo de Activo</th>
+                <th scope="col">Estado Mantenimiento</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody style={{ textAlign: "center" }}>
+              {activos.length > 0 ? (
+                activos.map((activo) => (
+                  <tr style={{ height: "45px" }} key={activo.id_activo}>
+                    <td>{activo.id_activo}</td>
+                    <td>{activo.numero_serie}</td>
+                    <td>{activo.tipo_activo}</td>
+                    <td>{activo.estado_mantenimiento.toUpperCase()}</td>
+                    <td>
                       <>
                         <i
-                          className="fas fa-book"
+                          className="fas fa-eye"
                           style={{
-                            color: "rgb(163, 33, 38)",
+                            color: "rgb(50, 50, 50)",
                             cursor: "pointer",
                             marginRight: "10px",
                           }}
-                          onClick={() => agregarActividad(activo)}
+                          onClick={() => verListaActividades(activo)}
                         ></i>
-                        <i
-                          className="fas fa-trash"
-                          style={{
-                            color: "rgb(200, 0, 0)",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => mostrarCuadro(activo)}
-                        ></i>
+                        {activo.estado_mantenimiento === "en proceso" && (
+                          <>
+                            <i
+                              className="fas fa-book"
+                              style={{
+                                color: "rgb(163, 33, 38)",
+                                cursor: "pointer",
+                                marginRight: "10px",
+                              }}
+                              onClick={() => agregarActividad(activo)}
+                            ></i>
+                            <i
+                              className="fas fa-trash"
+                              style={{
+                                color: "rgb(200, 0, 0)",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => mostrarCuadro(activo)}
+                            ></i>
+                          </>
+                        )}
                       </>
-                    )}
-                  </>
-                ),
-              },
-            ]}
-            mostrarFiltros={false} // Oculta los filtros y paginación
-          />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr style={{ height: "60px" }}>
+                  <td colSpan="9" className="text-center">
+                    No se encontraron activos asociados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </div>*/}
 
       {mostrarTablaAgregar && (
         <>
@@ -540,12 +853,40 @@ function MantenimientoVisual() {
           >
             <div
               className="modal-dialog"
-              style={{ maxWidth: "1000px", maxHeight: "1000px" }}
+              style={{
+                maxWidth: "1300px",
+                maxHeight: "1000px",
+              }}
             >
               <div className="modal-content">
                 <div className="modal-body">
-                  <ListadoActivo
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="mb-0">Agregar Activos Al Mantenimiento</h4>
+                    <span
+                      className="close"
+                      style={{
+                        fontSize: "2rem",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        color: "#921c21",
+                      }}
+                      onClick={cerrarListado}
+                    >
+                      &times;
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-4"></div>
+                  {/*<ListadoActivo
                     closeModal={cerrarListado}
+                    idMantenimiento={id}
+                  />*/}
+                  <TablaActivosMntenimientos
+                    activos={activosDispAgregar}
+                    selectedActivos={selectedActivos}
+                    handleSelectActivo={handleSelectActivo}
+                    selectAllActivos={selectAllActivos}
+                    columnas={columnas}
+                    filtrosConfig={filtrosConfig}
                     idMantenimiento={id}
                   />
                 </div>

@@ -12,7 +12,7 @@ module.exports.getMantenimientos = (req, res) => {
   const where = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
     
   const query = `
-    SELECT 
+     SELECT 
     @row_number := @row_number + 1 AS orden, 
     m.id_mantenimiento AS numero,  
     m.codigo_mantenimiento AS codigo,
@@ -22,7 +22,9 @@ module.exports.getMantenimientos = (req, res) => {
     dm.estado_mantenimiento AS estado,
     activos_agrupados.activos,
     m.observaciones AS descripcion,
-    activos_agrupados.detalle
+    activos_agrupados.detalle,
+    lbr.cedula as cedula,
+    emp.ruc as ruc
 FROM 
     (SELECT @row_number := 0) r, -- Inicializar la variable para numeración
     mantenimientos m
@@ -48,6 +50,14 @@ LEFT JOIN
     ) dm 
 ON 
     m.id_mantenimiento = dm.id_mantenimiento
+    LEFT JOIN 
+    laboratoristas lbr-- JOIN adicional para obtener el laboratorista
+ON 
+    m.cedula_laboratorista = lbr.cedula
+        LEFT JOIN 
+    empresas_mantenimientos emp-- JOIN adicional para obtener el laboratorista
+ON 
+    m.ruc_empresa = emp.ruc 
 ${where} -- Aplicar filtros dinámicos aquí
 GROUP BY 
     m.id_mantenimiento, 
