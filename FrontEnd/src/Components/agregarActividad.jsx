@@ -342,7 +342,12 @@ function AgregarActividad({
       setComponentes((prev) => prev.filter((comp) => comp.id !== componenteId));
 
       setComponentes((prev) => [...prev, componente]);
+    if(categoriaSeleccionada){
       setComponentes(datosComponentes[categoriaSeleccionada]);
+
+    }else{
+      setComponentes([]);
+    }
     }
   };
   const actualizarDatosComponentes = () => {
@@ -369,8 +374,15 @@ function AgregarActividad({
   };
   const handleCategoriaChange = (e, newValue) => {
     const categoria = newValue || e?.target?.value || ""; // Obtiene el valor según el origen del evento
+ 
+    if(categoria==='tarjetasmadre'){
+      setCategoriaSeleccionada('tarjetasMadre'); // Actualiza la categoría seleccionada
+
+    }else{
+      setCategoriaSeleccionada(categoria); // Actualiza la categoría seleccionada
+
+    }
     console.log(categoria);
-    setCategoriaSeleccionada(categoria); // Actualiza la categoría seleccionada
     console.log(datosComponentes);
     const elegidos = componentesSeleccionados;
     console.log(elegidos);
@@ -468,7 +480,7 @@ function AgregarActividad({
           margintop: "10px",
           marginBottom: "20px",
           borderBottom: "1px solid #ddd",
-          paddingBottom: "1px", 
+          paddingBottom: "1px",
         }}
       >
         <p>
