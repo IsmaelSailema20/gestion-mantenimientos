@@ -44,7 +44,7 @@ function MantenimientoVisual() {
     mensaje: "",
   });
   const [isDisabled, setIsDisabled] = useState(false);
-
+  // Cargar activos disponibles al montar el componente
   useEffect(() => {
     axios
       .get("http://localhost:5000/activos-disponibles")
@@ -57,6 +57,8 @@ function MantenimientoVisual() {
         setShowModalError(true);
       });
   }, []);
+
+  // Inicializar mantenimiento
   useEffect(() => {
     if (!mantenimiento?.numero) {
       const savedMantenimiento = JSON.parse(
@@ -64,17 +66,24 @@ function MantenimientoVisual() {
       );
       if (savedMantenimiento) {
         setMantenimiento(savedMantenimiento);
-        console.log(mantenimiento);
-        console.log(mantenimiento.inicio);
-        setFechaInicio(mantenimiento?.inicio);
       } else {
         console.error("No se encontraron datos de mantenimiento.");
         navigate("/");
       }
     } else {
-      console.log(mantenimiento);
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
+  }, [mantenimiento?.numero]);
+
+  // Actualizar estados derivados de mantenimiento
+  useEffect(() => {
+    if (mantenimiento) {
+      setFechaInicio(mantenimiento.inicio || ""); // Actualiza fechaInicio
+    }
+  }, [mantenimiento]);
+
+  // Cargar activos asociados al mantenimiento
+  useEffect(() => {
     const fetchActivos = async () => {
       try {
         const response = await axios.post(
@@ -88,26 +97,7 @@ function MantenimientoVisual() {
         setError("No se pudieron cargar los activos.");
       }
     };
-    /*const consultarMantenimiento = async () => {
-      try {
-        const response = await axios.post(
-          "http://localhost:5000/consultarMantenimiento",
-          {
-            id: id,
-          }
-        );
-        console.log(mantenimiento);
-        setdataMantenimiento(response.data);
-        console.log(response.data);
-        if (response.data && response.data[0].fecha_fin) {
-          setIsDisabled(true);
-        }
-      } catch (err) {
-        console.error("Error al consultar el mantenimiento:", err);
-      }
-    };
-*/
-    //  consultarMantenimiento();
+
     fetchActivos();
   }, [id]);
 
@@ -290,21 +280,6 @@ function MantenimientoVisual() {
       alert("Hubo un error al finalizar el mantenimiento total.");
     }
   };
-
-  const handleFechaInicioChange = (e) => {
-    setFechaInicio(e.target.value);
-  };
-
-  const handlefechaFinChange = (e) => {
-    setFechaFin(e.target.value);
-  };
-
-  const handleTipoChange = (e) => {
-    setTipo(e.target.value);
-  };
-  const handleEstadoChange = (e) => {
-    setTipo(e.target.value);
-  };
   const CerrarSesion = () => {
     localStorage.removeItem("token");
     navigate("/");
@@ -429,6 +404,8 @@ function MantenimientoVisual() {
     ...mantenimiento,
   }); // Estado local para los datos editables
 
+  console.log(editableMantenimiento.incio);
+
   const guardarCambios = async () => {
     try {
       // Construir el objeto con los datos actualizados
@@ -449,24 +426,42 @@ function MantenimientoVisual() {
         datosActualizados
       );
 
-      // Mostrar mensaje de éxito
-      alert("Cambios guardados exitosamente.");
-      setModoEdicion(false); // Salir del modo edición
+      // Actualizar datos locales y mostrar modal de éxito
+      setMantenimiento(editableMantenimiento);
+      localStorage.setItem(
+        "mantenimiento",
+        JSON.stringify(editableMantenimiento)
+      );
+      setModoEdicion(false);
+
+      // Configurar datos y mostrar modal
+      setModalData({
+        titulo: "Cambios guardados con éxito",
+        mensaje: "Los cambios se guardaron de manera exitosa.",
+      });
+      setShowModal(true);
+
+      // Ocultar el modal después de 3 segundos
+      setTimeout(() => {
+        setShowModal(false);
+      }, 3000);
     } catch (error) {
       console.error("Error al guardar los cambios:", error);
 
-      // Mostrar mensaje de error
-      alert("Ocurrió un error al guardar los cambios.");
+      // Configurar datos y mostrar modal de error
+      setModalDataError({
+        titulo: "Error al guardar los cambios:",
+        mensaje: "Ocurrió un error durante la actualización de los datos.",
+      });
+      setShowModalError(true);
+
+      // Ocultar el modal de error después de 3 segundos
+      setTimeout(() => {
+        setShowModalError(false);
+      }, 3000);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditableMantenimiento((prev) => ({
-      ...prev,
-      [name]: value, // Actualiza el valor del campo editado
-    }));
-  };
   return (
     <div>
       <div
@@ -559,7 +554,9 @@ function MantenimientoVisual() {
           {/* Código Mantenimiento */}
           <div className="col-md-3">
             <label className="form-label fw-bold">Código mantenimiento:</label>
-            <p className="form-control bg-light">{mantenimiento.codigo}</p>
+            <p className="form-control bg-light">
+              {editableMantenimiento.codigo}
+            </p>
           </div>
 
           {/* Fecha Inicio */}
@@ -568,8 +565,13 @@ function MantenimientoVisual() {
             <input
               type="date"
               className="form-control"
-              value={fechaInicio}
-              onChange={handleFechaInicioChange}
+              value={editableMantenimiento.inicio || ""} // Usar "inicio"
+              onChange={(e) =>
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  inicio: e.target.value, // Actualizar "inicio"
+                }))
+              }
               disabled={!modoEdicion}
             />
           </div>
@@ -580,8 +582,13 @@ function MantenimientoVisual() {
             <input
               type="date"
               className="form-control"
-              value={fechaFin}
-              onChange={handlefechaFinChange}
+              value={editableMantenimiento.fin || ""} // Usar "fin"
+              onChange={(e) =>
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  fin: e.target.value, // Actualizar "fin"
+                }))
+              }
               disabled={!modoEdicion}
             />
           </div>
@@ -591,8 +598,13 @@ function MantenimientoVisual() {
             <label className="form-label fw-bold">Tipo Mantenimiento:</label>
             <select
               className="form-select"
-              value={tipo}
-              onChange={handleTipoChange}
+              value={editableMantenimiento.tipo || ""}
+              onChange={(e) =>
+                setEditableMantenimiento((prev) => ({
+                  ...prev,
+                  tipo: e.target.value,
+                }))
+              }
               disabled={!modoEdicion}
             >
               <option value="preventivo">Preventivo</option>
@@ -608,8 +620,7 @@ function MantenimientoVisual() {
               value={tipoEncargado}
               onChange={(e) => {
                 const nuevoTipo = e.target.value;
-                setTipoEncargado(nuevoTipo); // Actualiza el tipo de encargado
-                // Restablece el valor del responsable al cambiar de tipo
+                setTipoEncargado(nuevoTipo);
                 setEditableMantenimiento((prev) => ({
                   ...prev,
                   cedula: nuevoTipo === "laboratorista" ? "" : null,
@@ -630,7 +641,7 @@ function MantenimientoVisual() {
               className="form-select"
               value={
                 tipoEncargado === "laboratorista"
-                  ? editableMantenimiento.cedula
+                  ? editableMantenimiento.cedula || ""
                   : editableMantenimiento.ruc || ""
               }
               onChange={(e) => {
@@ -663,16 +674,16 @@ function MantenimientoVisual() {
             <label className="form-label fw-bold">Estado Mantenimiento:</label>
             <select
               className="form-select"
-              value={editableMantenimiento.estado || ""} // Asegura que el valor esté sincronizado
+              value={editableMantenimiento.estado || ""}
               onChange={(e) =>
                 setEditableMantenimiento((prev) => ({
                   ...prev,
-                  estado: e.target.value, // Actualiza el estado
+                  estado: e.target.value,
                 }))
               }
-              disabled={!modoEdicion} // Deshabilitado si no está en modo edición
+              disabled={!modoEdicion}
             >
-              <option value="en_proceso">En Proceso</option>
+              <option value="en proceso">En Proceso</option>
               <option value="finalizado">Finalizado</option>
             </select>
           </div>
@@ -683,7 +694,7 @@ function MantenimientoVisual() {
             <textarea
               className="form-control"
               rows="3"
-              value={mantenimiento.descripcion || ""}
+              value={editableMantenimiento.descripcion || ""}
               onChange={(e) =>
                 setEditableMantenimiento((prev) => ({
                   ...prev,
