@@ -943,8 +943,7 @@ function MantenimientoVisual() {
                   <TablaActivosMntenimientos
                     activos={activosDispAgregar}
                     selectedActivos={selectedActivos}
-                    handleSelectActivo={handleSelectActivo}
-                    selectAllActivos={selectAllActivos}
+                    onSelectedActivosChange={handleSelectActivo}
                     columnas={columnas}
                     filtrosConfig={filtrosConfig}
                     idMantenimiento={id}

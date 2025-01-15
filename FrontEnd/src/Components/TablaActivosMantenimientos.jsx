@@ -207,7 +207,7 @@ const TablaSeleccionActivos = ({
           "http://localhost:5000/guardar_activos",
           {
             idMantenimiento, // Incluye el ID del mantenimiento
-            activos: selectedActivos,
+            activos: selectedActivos.map((activo) => activo.id_activo), // Extraer solo los IDs
           }
         );
 
