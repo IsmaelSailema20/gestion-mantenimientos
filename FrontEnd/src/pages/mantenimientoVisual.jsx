@@ -11,6 +11,8 @@ import { useLocation } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ListaActividad from "../Components/detalleActMantenimiento";
 import CuadroConf from "../Components/cuadroConfirmacion";
+import TablaSeleccionActivos1 from "../Components/TablaActivosMantenimientos1";
+
 function MantenimientoVisual() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ function MantenimientoVisual() {
   const [error, setError] = useState(null);
   const [mostrarListaActividad, setMostrarListaActividad] = useState(false);
   const [mostrarCuadroConf, setmostrarCuadroConf] = useState(false);
+  const [activosFiltrados, setActivosFiltrados] = useState(activos || []);
 
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ titulo: "", mensaje: "" });
@@ -60,6 +63,7 @@ function MantenimientoVisual() {
       console.log(mantenimiento);
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
+    if (!id) return;
     const fetchActivos = async () => {
       try {
         const response = await axios.post(
@@ -94,6 +98,25 @@ function MantenimientoVisual() {
     //  consultarMantenimiento();
     fetchActivos();
   }, [id]);
+  const columnas = [
+    { header: "Código", render: (activo) => activo.codigo },
+    { header: "Tipo", render: (activo) => activo.tipo },
+    { header: "Clase", render: (activo) => activo.clase },
+    { header: "Fecha Registro", render: (activo) => activo.fecha_registro },
+    { header: "Ubicación", render: (activo) => activo.ubicacion },
+    { header: "Proveedor", render: (activo) => activo.proveedor },
+    {
+      header: "Acciones",
+      render: (activo) => (
+        <>
+          <button onClick={() => console.log("Ver", activo.codigo)}>👁️</button>
+          <button onClick={() => console.log("Eliminar", activo.codigo)}>
+            🗑️
+          </button>
+        </>
+      ),
+    },
+  ];
 
   const agregarActivos = () => {
     setMostrarTablaAgregar(true);
@@ -437,88 +460,60 @@ function MantenimientoVisual() {
           </button>
         </div>
 
-        <div
-          style={{
-            maxHeight: "300px",
-            overflowY: "auto",
-          }}
-        >
-          <table
-            className="table-bordered"
-            style={{ border: "2px solid black", width: "100%" }}
-          >
-            <thead
-              style={{
-                backgroundColor: "#a32126",
-                height: "50px",
-                color: "white",
-                textAlign: "center",
-                position: "sticky",
-                top: 0,
-                zIndex: 1, // Asegura que el encabezado quede encima de las filas al hacer scroll
-              }}
-            >
-              <tr>
-                <th scope="col">ID Activo</th>
-                <th scope="col">Número de Serie</th>
-                <th scope="col">Tipo de Activo</th>
-                <th scope="col">Estado Mantenimiento</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody style={{ textAlign: "center" }}>
-              {activos.length > 0 ? (
-                activos.map((activo) => (
-                  <tr style={{ height: "45px" }} key={activo.id_activo}>
-                    <td>{activo.id_activo}</td>
-                    <td>{activo.numero_serie}</td>
-                    <td>{activo.tipo_activo}</td>
-                    <td>{activo.estado_mantenimiento.toUpperCase()}</td>
-                    <td>
+        <div style={{ maxHeight: "300px", 
+          overflowY: "auto" }}>
+          <TablaSeleccionActivos1
+            activos={activos || []}
+            columnas={[
+              { header: "Código", render: (activo) => activo.codigo },
+              { header: "Tipo", render: (activo) => activo.tipo },
+              { header: "Clase", render: (activo) => activo.clase },
+              {
+                header: "Fecha Registro",
+                render: (activo) => activo.fecha_registro,
+              },
+              { header: "Ubicación", render: (activo) => activo.ubicacion },
+              { header: "Proveedor", render: (activo) => activo.proveedor },
+              {
+                header: "Acciones",
+                render: (activo) => (
+                  <>
+                    <i
+                      className="fas fa-eye"
+                      style={{
+                        color: "rgb(50, 50, 50)",
+                        cursor: "pointer",
+                        marginRight: "10px",
+                      }}
+                      onClick={() => verListaActividades(activo)}
+                    ></i>
+                    {activo.estado_mantenimiento === "en proceso" && (
                       <>
                         <i
-                          className="fas fa-eye"
+                          className="fas fa-book"
                           style={{
-                            color: "rgb(50, 50, 50)",
+                            color: "rgb(163, 33, 38)",
                             cursor: "pointer",
                             marginRight: "10px",
                           }}
-                          onClick={() => verListaActividades(activo)}
+                          onClick={() => agregarActividad(activo)}
                         ></i>
-                        {activo.estado_mantenimiento === "en proceso" && (
-                          <>
-                            <i
-                              className="fas fa-book"
-                              style={{
-                                color: "rgb(163, 33, 38)",
-                                cursor: "pointer",
-                                marginRight: "10px",
-                              }}
-                              onClick={() => agregarActividad(activo)}
-                            ></i>
-                            <i
-                              className="fas fa-trash"
-                              style={{
-                                color: "rgb(200, 0, 0)",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => mostrarCuadro(activo)}
-                            ></i>
-                          </>
-                        )}
+                        <i
+                          className="fas fa-trash"
+                          style={{
+                            color: "rgb(200, 0, 0)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => mostrarCuadro(activo)}
+                        ></i>
                       </>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr style={{ height: "60px" }}>
-                  <td colSpan="9" className="text-center">
-                    No se encontraron activos asociados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    )}
+                  </>
+                ),
+              },
+            ]}
+            mostrarFiltros={false} // Oculta los filtros y paginación
+          />
         </div>
       </div>
 
