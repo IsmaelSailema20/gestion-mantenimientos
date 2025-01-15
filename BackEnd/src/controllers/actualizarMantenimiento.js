@@ -4,6 +4,8 @@ module.exports.actualizarMantenimiento = (req, res) => {
     const { id } = req.params;
     const { fechaInicio, fechaFin, tipo, cedula, ruc, descripcion, estado } = req.body;
     const fechaFinSend = fechaFin || null;
+    console.log(fechaInicio, fechaFin, tipo, cedula, ruc, descripcion, estado,id);
+    
     // Consulta para actualizar mantenimientos
     const queryMantenimientos = `
       UPDATE mantenimientos
