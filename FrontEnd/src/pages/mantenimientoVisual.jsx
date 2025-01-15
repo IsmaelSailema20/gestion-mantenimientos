@@ -21,6 +21,9 @@ function MantenimientoVisual() {
     location.state?.mantenimiento ||
       JSON.parse(localStorage.getItem("mantenimiento"))
   );
+  const hoy = new Date().toISOString().split("T")[0]; // Obtén la fecha actual en formato 'YYYY-MM-DD'
+  const [reloadTable, setReloadTable] = useState(false);
+
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
   const [activosDispAgregar, setActivosDispAgregar] = useState([]);
   const [fechaInicio, setFechaInicio] = useState(mantenimiento?.inicio || "");
@@ -60,6 +63,8 @@ function MantenimientoVisual() {
 
   // Inicializar mantenimiento
   useEffect(() => {
+    console.log(mantenimiento)
+    
     if (!mantenimiento?.numero) {
       const savedMantenimiento = JSON.parse(
         localStorage.getItem("mantenimiento")
@@ -71,6 +76,7 @@ function MantenimientoVisual() {
         navigate("/");
       }
     } else {
+      
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
   }, [mantenimiento?.numero]);
@@ -101,6 +107,42 @@ function MantenimientoVisual() {
     fetchActivos();
   }, [id]);
 
+  const handleFechaChange = (e) => {
+    const nuevaFecha = e.target.value;
+    if (nuevaFecha >= hoy) {
+      setFechaFin(nuevaFecha);
+      setEditableMantenimiento((prev) => ({
+        ...prev,
+        inicio: nuevaFecha, // Actualizar el valor de "fin"
+      }));
+    } else {
+      if (nuevaFecha) {
+        setModalDataError({
+          titulo: "Fecha inválida",
+          mensaje: "La fecha no puede ser anterior a la fecha actual",
+        });
+        setShowModalError(true);
+      }
+    }
+  };
+  const handleFechaFinChange = (e) => {
+    const nuevaFecha = e.target.value;
+    if (nuevaFecha >= hoy) {
+      setFechaFin(nuevaFecha);
+      setEditableMantenimiento((prev) => ({
+        ...prev,
+        fin: nuevaFecha, // Actualizar el valor de "fin"
+      }));
+    } else {
+      if (nuevaFecha) {
+        setModalDataError({
+          titulo: "Fecha inválida",
+          mensaje: "La fecha no puede ser anterior a la fecha actual",
+        });
+        setShowModalError(true);
+      }
+    }
+  };
   const agregarActivos = () => {
     setMostrarTablaAgregar(true);
   };
@@ -330,7 +372,7 @@ function MantenimientoVisual() {
           ></i>
 
           {/* Condicional para mostrar más íconos si el estado es "en proceso" */}
-          {activo.estado_mantenimiento === "en proceso" && (
+          {editableMantenimiento.estado === "en proceso" && (
             <>
               <i
                 className="fas fa-book"
@@ -403,23 +445,36 @@ function MantenimientoVisual() {
   const [editableMantenimiento, setEditableMantenimiento] = useState({
     ...mantenimiento,
   }); // Estado local para los datos editables
-
-  console.log(editableMantenimiento.incio);
+  const fechaActual = new Date().toISOString().split("T")[0]; // Formato 'YYYY-MM-DD'
 
   const guardarCambios = async () => {
     try {
       // Construir el objeto con los datos actualizados
+      console.log(editableMantenimiento.fin , editableMantenimiento.inicio);
+      
       const datosActualizados = {
         codigo: editableMantenimiento.codigo || null,
         fechaInicio: editableMantenimiento.inicio || null,
-        fechaFin: editableMantenimiento.fin || null,
+        fechaFin: editableMantenimiento.fin || fechaActual,
         tipo: editableMantenimiento.tipo || null,
         estado: editableMantenimiento.estado || null,
         cedula: editableMantenimiento.cedula || null, // Si es laboratorista
         ruc: editableMantenimiento.ruc || null, // Si es empresa
         descripcion: editableMantenimiento.descripcion || null,
       };
-
+      if (editableMantenimiento.fin < editableMantenimiento.inicio) {
+        setModalDataError({
+          titulo: "Fechas invalidas",
+          mensaje:
+            "La fecha de finalización no puede ser anterior a la fecha de incio",
+        });
+        setShowModalError(true);
+        setTimeout(() => {
+          setShowModalError(false);
+        }, 3000);
+        return;
+      }
+      console.log(editableMantenimiento.fin);
       // Hacer la solicitud PUT al backend
       const response = await axios.put(
         `http://localhost:5000/mantenimientos/${editableMantenimiento.numero}`,
@@ -427,12 +482,13 @@ function MantenimientoVisual() {
       );
 
       // Actualizar datos locales y mostrar modal de éxito
-      setMantenimiento(editableMantenimiento);
+      //   setMantenimiento(editableMantenimiento);
       localStorage.setItem(
         "mantenimiento",
         JSON.stringify(editableMantenimiento)
       );
       setModoEdicion(false);
+      setReloadTable((prev) => !prev);
 
       // Configurar datos y mostrar modal
       setModalData({
@@ -460,6 +516,7 @@ function MantenimientoVisual() {
         setShowModalError(false);
       }, 3000);
     }
+    
   };
 
   return (
@@ -566,12 +623,8 @@ function MantenimientoVisual() {
               type="date"
               className="form-control"
               value={editableMantenimiento.inicio || ""} // Usar "inicio"
-              onChange={(e) =>
-                setEditableMantenimiento((prev) => ({
-                  ...prev,
-                  inicio: e.target.value, // Actualizar "inicio"
-                }))
-              }
+              onChange={handleFechaChange} // Llamada directa a la función
+              min={hoy} // Configura el valor mínimo permitido
               disabled={!modoEdicion}
             />
           </div>
@@ -583,13 +636,9 @@ function MantenimientoVisual() {
               type="date"
               className="form-control"
               value={editableMantenimiento.fin || ""} // Usar "fin"
-              onChange={(e) =>
-                setEditableMantenimiento((prev) => ({
-                  ...prev,
-                  fin: e.target.value, // Actualizar "fin"
-                }))
-              }
+              onChange={handleFechaFinChange} // Llamada directa a la función
               disabled={!modoEdicion}
+              min={hoy} // Configura el valor mínimo permitido
             />
           </div>
 

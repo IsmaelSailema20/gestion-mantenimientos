@@ -7,12 +7,10 @@ import ErrorModal from "./ErrorModal";
 
 const TablaSeleccionActivos = ({
   activos,
-  selectedActivos,
-  handleSelectActivo,
-  selectAllActivos,
   columnas,
   filtrosConfig,
   idMantenimiento,
+  onSelectedActivosChange
 }) => {
   const [filtrosSeleccionados, setFiltrosSeleccionados] = useState({});
   const [activosFiltrados, setActivosFiltrados] = useState(activos);
@@ -27,12 +25,14 @@ const TablaSeleccionActivos = ({
     titulo: "",
     mensaje: "",
   });
-
+  const [selectedActivos, setSelectedActivos] = useState([]);
+  const selectAllActivos = (activos) => {
+    setSelectedActivos(activos); // Asignamos todos los activos filtrados seleccionados
+  };
   // Calcular activos a mostrar según la página actual
   const indiceInicial = (paginaActual - 1) * elementosPorPagina;
   const indiceFinal = indiceInicial + elementosPorPagina;
   const activosPaginados = activosFiltrados.slice(indiceInicial, indiceFinal);
-
   // Total de páginas basado en activos filtrados
   const totalPaginas = Math.ceil(activosFiltrados.length / elementosPorPagina);
 
@@ -40,6 +40,24 @@ const TablaSeleccionActivos = ({
     if (paginaActual < totalPaginas) {
       setPaginaActual(paginaActual + 1);
     }
+  };
+  const handleSelectActivo = (activo) => {
+    setSelectedActivos((prevSelected) => {
+      const isSelected = prevSelected.some(
+        (item) => item.id_activo === activo.id_activo
+      );
+
+      const updatedSelected = isSelected
+        ? prevSelected.filter((item) => item.id_activo !== activo.id_activo)
+        : [...prevSelected, activo];
+
+      // Notificar al componente padre
+      if (onSelectedActivosChange) {
+        onSelectedActivosChange(updatedSelected);
+      }
+
+      return updatedSelected;
+    });
   };
 
   const handlePaginaAnterior = () => {
@@ -136,6 +154,8 @@ const TablaSeleccionActivos = ({
 
     // Actualizamos los datos filtrados
     setActivosFiltrados(datosFiltrados);
+    console.log(datosFiltrados);
+
     setPaginaActual(1); // Reiniciar a la primera página al aplicar filtros
   }, [filtrosSeleccionados, terminoBusqueda, activos]);
 
@@ -145,6 +165,21 @@ const TablaSeleccionActivos = ({
     setActivosFiltrados(activos); // Restablece los datos filtrados a los originales
     setPaginaActual(1); // Reinicia a la primera página
   };
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+
+    if (checked) {
+      // Si el checkbox está marcado, selecciona todos los activos filtrados o todos los activos
+      setSelectedActivos(
+        activosFiltrados.length > 0 ? activosFiltrados : activos
+      );
+    } else {
+      // Si el checkbox está desmarcado, deselecciona todos los activos
+      setSelectedActivos([]);
+    }
+  };
+
   const resetModalStates = () => {
     setShowModal(false);
     setShowModalError(false);
@@ -339,11 +374,28 @@ const TablaSeleccionActivos = ({
         <div className="d-flex align-items-center mb-4 gap-3">
           {/* Checkbox de selección */}
           <Checkbox
-            onChange={(e) => selectAllActivos(e.target.checked)}
             checked={
-              selectedActivos.length === activos.length && activos.length > 0
+              activosFiltrados.length > 0
+                ? selectedActivos.length === activosFiltrados.length
+                : selectedActivos.length === activos.length
             }
+            onChange={(e) => {
+              const checked = e.target.checked;
+              const updatedSelected = checked
+                ? activosFiltrados.length > 0
+                  ? activosFiltrados
+                  : activos
+                : [];
+
+              // Actualiza el estado y notifica al componente padre
+              setSelectedActivos(updatedSelected);
+              onSelectedActivosChange(updatedSelected);
+              if (onSelectedActivosChange) {
+                onSelectedActivosChange(updatedSelected);
+              }
+            }}
           />
+          <p>Cantidad de activos seleccionados: {selectedActivos.length}</p>
           Seleccionar Todos
           {/* Botón Limpiar Filtros */}
           <button
@@ -396,8 +448,11 @@ const TablaSeleccionActivos = ({
                           cursor: "pointer",
                         }}
                         type="checkbox"
-                        checked={selectedActivos.includes(activo.id_activo)}
-                        onChange={() => handleSelectActivo(activo.id_activo)}
+                        checked={selectedActivos.some(
+                          (activoSeleccionado) =>
+                            activoSeleccionado.id_activo === activo.id_activo
+                        )}
+                        onChange={() => handleSelectActivo(activo)}
                       />
                     </td>
                     {columnas.map((columna, index) => (

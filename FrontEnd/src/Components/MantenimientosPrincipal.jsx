@@ -387,7 +387,11 @@ const MantenimientosPrincipal = ({ onEdit }) => {
                       <td>{mantenimiento.estado}</td>
                       <td>{mantenimiento.activos}</td>
                       <td>{mantenimiento.tipo}</td>
-                      <td>{mantenimiento.descripcion}</td>
+                      <td>
+                        {mantenimiento.descripcion.length > 30
+                          ? `${mantenimiento.descripcion.substring(0, 30)}...`
+                          : mantenimiento.descripcion}
+                      </td>{" "}
                       <td className="text-center" style={{ padding: 0 }}>
                         <button
                           onClick={() => handleVerClick(mantenimiento)}

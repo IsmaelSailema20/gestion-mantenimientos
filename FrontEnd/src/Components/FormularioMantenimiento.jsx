@@ -20,6 +20,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
     titulo: "",
     mensaje: "",
   });
+  const hoy = new Date().toISOString().split("T")[0]; // Obtén la fecha actual en formato 'YYYY-MM-DD'
 
   const [tipoEncargado, setTipoEncargado] = useState("");
   const [encargados, setEncargados] = useState([]);
@@ -64,6 +65,11 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
         : [...prevSelected, id]
     );
   };
+  const handleSelectedActivosChange = (selectedActivos) => {
+    console.log("Activos seleccionados:", selectedActivos);
+    setSelectedActivos(selectedActivos);
+    // Puedes hacer algo con los activos seleccionados aquí
+  };
 
   const selectAllActivos = (checked) => {
     setSelectedActivos(
@@ -76,6 +82,19 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
     setShowModalError(false);
     setModalData({ titulo: "", mensaje: "" });
     setModalDataError({ titulo: "", mensaje: "" });
+  };
+
+  const handleFechaChange = (e) => {
+    const nuevaFecha = e.target.value;
+    if (nuevaFecha >= hoy) {
+      setFechaInicio(nuevaFecha);
+    } else {
+      setModalDataError({
+        titulo: "Fecha inválida",
+        mensaje: "La fecha no puede ser anterior a la fecha actual",
+      });
+      setShowModalError(true);
+    }
   };
 
   const handleSubmit = async () => {
@@ -106,7 +125,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
           tipo,
           descripcion,
           identificador,
-          activos: selectedActivos,
+          activos: selectedActivos.map((activo) => activo.id_activo), // Extraer solo los IDs
           fecha: fechaInicio,
         }
       );
@@ -245,10 +264,11 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
                 type="date"
                 label="Fecha de Inicio"
                 value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
+                onChange={handleFechaChange}
                 variant="outlined"
                 className="form-control"
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ min: hoy }} // Configura el valor mínimo permitido
               />
             </div>
             <div className="col-md-6">
@@ -273,7 +293,7 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
         <div className="col-md-4 d-flex align-items-center">
           <TextField
             label="Descripción del mantenimiento"
-            inputProps={{ maxLength: 70 }}
+            inputProps={{ maxLength: 250 }}
             variant="outlined"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
@@ -296,11 +316,10 @@ function FormularioMantenimiento({ closeModal, recargarTabla }) {
       </div>
       <TablaActivosMntenimientos
         activos={activos}
-        selectedActivos={selectedActivos}
         handleSelectActivo={handleSelectActivo}
-        selectAllActivos={selectAllActivos}
         columnas={columnas}
         filtrosConfig={filtrosConfig}
+        onSelectedActivosChange={handleSelectedActivosChange}
       />
 
       {/* Modales de Éxito y Error */}
