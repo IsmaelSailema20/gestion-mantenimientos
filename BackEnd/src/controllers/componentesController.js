@@ -16,7 +16,7 @@ module.exports.getComponentes = (req, res) => {
     const opcionNoDefinido = results.find((row) =>
       row.nombre_componente.toLowerCase().includes("no definido")
     );
-
+  
     // Si no existe en la base de datos, retornamos un error
     if (!opcionNoDefinido) {
       console.error("No se encontró el componente 'No definido' en la base de datos");
@@ -41,12 +41,15 @@ module.exports.getComponentes = (req, res) => {
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'procesadores',
         });
       } else if (nombre.includes("ram")) {
         categorias.ram.push({
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'ram',
+
         });
       } else if (
         nombre.includes("disco") ||
@@ -59,24 +62,32 @@ module.exports.getComponentes = (req, res) => {
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'discos',
+
         });
       } else if (nombre.includes("gráfica")) {
         categorias.graficas.push({
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'graficas',
+
         });
       } else if (nombre.includes("fuente")) {
         categorias.fuentes.push({
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'graficas',
+
         });
       } else if (nombre.includes("madre")) {
         categorias.tarjetasMadre.push({
           id: row.id_componente,
           label: row.nombre_componente,
           descripcion: row.descripcion,
+          categoria:'tarjetasMadre',
+
         });
       }
     });

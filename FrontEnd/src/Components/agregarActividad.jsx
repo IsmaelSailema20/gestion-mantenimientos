@@ -60,7 +60,6 @@ function AgregarActividad({
 
         setActividadesSeleccionadas(actividadesPrevias);
 
-        // Filtrar actividades que no están en actividadesPrevias
         const actividadesFiltradas = actividadesDisponibles.filter(
           (actividad) =>
             !actividadesPrevias.some((previa) => previa.id === actividad.id)
@@ -93,8 +92,6 @@ function AgregarActividad({
         console.log(datosComponentes);
         const categoriasDisponibles = Object.keys(cmptotal.data);
         setCategorias(categoriasDisponibles);
-
-        console.error("Error al cargar componentes:", error);
       } catch (err) {
         console.error("Error al cargar componentes:", err);
         setError("Error al cargar componentes");
@@ -142,7 +139,10 @@ function AgregarActividad({
       }, 3000);
       return;
     }
-    if (!componentesSeleccionados || componentesSeleccionados.length === 0) {
+    if (
+      showComp == "Cambio de componentes" &&
+      (!componentesSeleccionados || componentesSeleccionados.length === 0)
+    ) {
       setModalDataError({
         titulo: "Error de Validación",
         mensaje: "Debe seleccionar al menos un componente.",
@@ -188,12 +188,11 @@ function AgregarActividad({
       );
       console.log(response.data.message);
       if (
-        response.data.message ===
-        "Las actividades se agregaron con éxito al activo."
+        response.data.message === "Las actividades se actualizaron con éxito."
       ) {
         setModalData({
-          titulo: "Actividad Agregada",
-          mensaje: "La actividad se agregó con éxito.",
+          titulo: "Cambios guardados",
+          mensaje: "Sus selecciones se guardaron correctamente",
         });
         setShowModal(true);
 
@@ -202,31 +201,15 @@ function AgregarActividad({
           closeModal();
         }, 3000);
       } else {
-        if (
-          response.data.message ===
-          "Todas las actividades ya están registradas. No se realizaron inserciones."
-        ) {
-          setModalData({
-            titulo: "Actividad Agregada",
-            mensaje: "La actividad se agregó con éxito.",
-          });
-          setShowModal(true);
-
-          setTimeout(() => {
-            setShowModal(false);
-            closeModal();
-          }, 3000);
-        } else {
-          setModalDataError({
-            titulo: "Error al agregar la actividad",
-            mensaje: "No se pudo agregar la actividad.",
-          });
-          setShowModalError(true);
-          setTimeout(() => {
-            setShowModalError(false);
-            closeModal();
-          }, 3000);
-        }
+        setModalDataError({
+          titulo: "Error al agregar la actividad",
+          mensaje: "No se pudo agregar la actividad.",
+        });
+        setShowModalError(true);
+        setTimeout(() => {
+          setShowModalError(false);
+          closeModal();
+        }, 3000);
       }
     } catch (err) {
       console.error("Error al agregar actividad:", err);
@@ -286,11 +269,10 @@ function AgregarActividad({
         const categoriasDisponibles = Object.keys(response.data);
         setCategorias(categoriasDisponibles);
 
-        //  const procesadores = response.data.procesadores || [];
-        //setComponentes(procesadores);
+        const procesadores = response.data.procesadores || [];
+        setComponentes(procesadores);
       } catch (error) {
         console.error("Error al cargar componentes:", error);
-        setComponentes([]);
       }
     }
   };
@@ -300,10 +282,11 @@ function AgregarActividad({
     const componente = componentes.find(
       (comp) => comp.id === Number(componenteId)
     );
-
+console.log(componente)
     if (componente) {
       const categoriaSeleccionadaa = categoriaSeleccionada; // Ya tienes esta categoría en tu estado
       const conteoActual = conteoCategorias[categoriaSeleccionadaa] || 0;
+
       if (conteoActual >= 1) {
         setModalDataError({
           titulo: "Componente Duplicado",
@@ -313,11 +296,12 @@ function AgregarActividad({
         setTimeout(() => {
           setShowModalError(false);
         }, 3000);
+        console.log(conteoActual);
         return;
       }
       setConteoCategorias((prev) => ({
         ...prev,
-        [categoriaSeleccionadaa]: conteoActual + 1,
+        [categoriaSeleccionadaa]:  1,
       }));
       setComponentesSeleccionados((prev) => [...prev, componente]);
       setComponentes((prev) =>
@@ -325,6 +309,8 @@ function AgregarActividad({
       );
       console.log("Componente seleccionado:", componente);
       console.log("Componentes restantes:", componentes);
+      console.log(conteoActual);
+
     }
   };
 
@@ -332,16 +318,30 @@ function AgregarActividad({
     const componente = componentesSeleccionados.find(
       (comp) => comp.id === componenteId
     );
+    console.log("Componente seleccionadoeliminar:", componente);
+
     if (componente) {
-      const categoria = categoriaSeleccionada;
+      const categoria = componente.categoria;
+
+      const componentesCategoria = datosComponentes[categoria] || [];
+      console.log(datosComponentes);
+      setComponentes(componentesCategoria);
+
+      console.log(categoriaSeleccionada);
       setConteoCategorias((prev) => ({
         ...prev,
-        [categoria]: (prev[categoria] || 1) - 1,
+        [categoria]: 0,
       }));
+      const conteoActual = conteoCategorias[categoria] || 0;
+
+      console.log(conteoActual);
       setComponentesSeleccionados((prev) =>
         prev.filter((comp) => comp.id !== componenteId)
       );
+      setComponentes((prev) => prev.filter((comp) => comp.id !== componenteId));
+
       setComponentes((prev) => [...prev, componente]);
+      setComponentes(datosComponentes[categoriaSeleccionada]);
     }
   };
   const actualizarDatosComponentes = () => {
@@ -370,9 +370,10 @@ function AgregarActividad({
     const categoria = e.target.value; // Obtiene la categoría seleccionada
     setCategoriaSeleccionada(categoria); // Actualiza la categoría seleccionada
     console.log(datosComponentes);
-    actualizarDatosComponentes();
     const elegidos = componentesSeleccionados;
     console.log(elegidos);
+    actualizarDatosComponentes();
+
     console.log(datosComponentes);
     // Filtra los componentes de la categoría seleccionada
     const componentesCategoria = datosComponentes[categoria] || [];
@@ -387,6 +388,9 @@ function AgregarActividad({
       setComponentes(componentesCategoria);
     }
   }, [datosComponentes, categoriaSeleccionada]);
+  useEffect(() => {
+    // Este código se ejecutará después de que la página se haya cargado
+  }, []); // El array vacío asegura que el efecto se ejecute solo una vez
   const handleComponenteSelect = (e) => {
     const { value } = e.target;
     const categoria = categoriaSeleccionada;
@@ -499,8 +503,8 @@ function AgregarActividad({
             border: "1px solid #ccc",
             borderRadius: "4px",
             minWidth: "300px",
-            maxHeight: "200px", // Altura máxima para habilitar el scroll
-            overflowY: "auto", // Habilitar el scroll vertical
+            maxHeight: "200px",
+            overflowY: "auto",
           }}
         >
           {actividadesSeleccionadas.length === 0 ? (
@@ -577,7 +581,7 @@ function AgregarActividad({
             style={{ padding: "8px", fontSize: "1rem" }}
           >
             <option value="">Seleccione un componente</option>
-            {componentes.map((componente) => (
+            {(componentes || []).map((componente) => (
               <option key={componente.id} value={componente.id}>
                 {componente.label}
               </option>
@@ -663,7 +667,7 @@ function AgregarActividad({
           marginBottom: "20px", // Ajusta el espaciado en la parte inferior si es necesario
         }}
       >
-      Guardar Cambios
+        Guardar Cambios
       </button>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {showModal && (
