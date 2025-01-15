@@ -48,7 +48,7 @@ function DetalleActivo({ activo, closeModal }) {
           boxSizing: "border-box",
         }}
       >
-        Detalle del activo {activo.numero_serie}
+        Actividades del activo {activo.numero_serie}
       </h4>
 
       <span

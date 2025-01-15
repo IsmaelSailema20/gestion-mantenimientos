@@ -401,7 +401,8 @@ const TablaSeleccionActivos = ({
           <button
             type="button"
             onClick={handleLimpiarFiltros}
-            className="btn btn-danger ms-auto"
+            className="btn  ms-auto"
+            
           >
             Limpiar Filtros
           </button>

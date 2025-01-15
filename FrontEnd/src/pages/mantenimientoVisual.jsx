@@ -63,8 +63,8 @@ function MantenimientoVisual() {
 
   // Inicializar mantenimiento
   useEffect(() => {
-    console.log(mantenimiento)
-    
+    console.log(mantenimiento);
+
     if (!mantenimiento?.numero) {
       const savedMantenimiento = JSON.parse(
         localStorage.getItem("mantenimiento")
@@ -76,7 +76,6 @@ function MantenimientoVisual() {
         navigate("/");
       }
     } else {
-      
       localStorage.setItem("mantenimiento", JSON.stringify(mantenimiento));
     }
   }, [mantenimiento?.numero]);
@@ -450,8 +449,8 @@ function MantenimientoVisual() {
   const guardarCambios = async () => {
     try {
       // Construir el objeto con los datos actualizados
-      console.log(editableMantenimiento.fin , editableMantenimiento.inicio);
-      
+      console.log(editableMantenimiento.fin, editableMantenimiento.inicio);
+
       const datosActualizados = {
         codigo: editableMantenimiento.codigo || null,
         fechaInicio: editableMantenimiento.inicio || null,
@@ -516,7 +515,6 @@ function MantenimientoVisual() {
         setShowModalError(false);
       }, 3000);
     }
-    
   };
 
   return (
@@ -601,7 +599,15 @@ function MantenimientoVisual() {
             </label>
           </div>
           {modoEdicion && (
-            <button className="btn btn-success ms-3" onClick={guardarCambios}>
+            <button
+              className="btn  ms-3"
+              style={{
+                backgroundColor: "rgb(163, 33, 38)",
+                color: "white",
+                marginRight: "10px",
+              }}
+              onClick={guardarCambios}
+            >
               Guardar Cambios
             </button>
           )}
@@ -758,9 +764,9 @@ function MantenimientoVisual() {
 
       <div
         style={{
-          textAlign: "center",
           marginBottom: "20px",
           alignItems: "center",
+          marginLeft:"150px",
         }}
       >
         <button
@@ -770,6 +776,7 @@ function MantenimientoVisual() {
             backgroundColor: "rgb(163, 33, 38)",
             color: "white",
             marginRight: "10px",
+            
           }}
           disabled={isDisabled}
         >
